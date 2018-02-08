@@ -59,7 +59,7 @@ if __name__ == "__main__":
     crop8 = Cropping2D(cropping=((2048, 2048), (1981, 1982)),name="crop8")(upsample8_)
 
     #Specialized Layer
-    concat_layer = concatenate([crop2, crop4, crop8], name="concat_layer")
+    concat_layer = concatenate([conv1_2_16,crop2, crop4, crop8], name="concat_layer")
     weighting_av = Conv2D(3, kernel_size=(1, 1), name="weighting_av")(concat_layer)
 
     model = Model(inputs=[data_input], outputs=[concat_layer,weighting_av])
@@ -72,4 +72,4 @@ if __name__ == "__main__":
     print(model.get_config())
     print(model.summary())
 
-    print("Hello")
+    model.load_weights('3_class.h5')
