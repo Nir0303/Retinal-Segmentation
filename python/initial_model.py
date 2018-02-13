@@ -2,13 +2,33 @@
 
 from keras.models import Sequential, Model
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
-from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D
+from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D,Activation
 from keras.layers import MaxPooling2D
 from keras import backend as K
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 import tensorflow as tf
+import numpy as np
+import os
+import prepare_image
 
+def transform_conv_weight(W):
+    # for non FC layers, do this because Keras does convolution vs Caffe correlation
+    for i in range(W.shape[0]):
+        for j in range(W.shape[1]):
+            W[i, j] = np.rot90(W[i, j], 2)
+    W = np.transpose(W,(3, 2, 1, 0))
+    return W
+
+def transform_fc_weight(W):
+    return W.T
+
+
+def output_of_lambda(input_shape):
+    return (input_shape[0], input_shape[1], input_shape[2],input_shape[3])
+
+def output_lambda(x):
+    return x
 
 
 if __name__ == "__main__":

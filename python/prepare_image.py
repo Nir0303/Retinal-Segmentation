@@ -48,12 +48,12 @@ def load_images(data_type="train", image_type="label"):
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
             new_image_data = np.stack([artery, vein, overlap], 0)
-            break
-        print(new_image_data.shape)
 
         images_data[index] = new_image_data
+        if index == 2:
+            break
 
-    return new_image_data
+    return images_data
 
 
 def load_drive_data():
@@ -61,7 +61,7 @@ def load_drive_data():
     train_labels = load_images(data_type="train", image_type="label")
     test_images = load_images(data_type="test", image_type="image")
     test_labels = load_images(data_type="test", image_type="label")
-
+    print(train_images.shape)
     print(train_images.max(), train_images.argmax(axis=1), train_images.argmax(axis=0))
     print(test_images.max(), test_images.argmax(axis=1), test_images.argmax(axis=0))
     print(test_labels.max(), test_labels.argmax(axis=1), test_labels.argmax(axis=0) )
@@ -69,4 +69,5 @@ def load_drive_data():
 
 
 
-load_drive_data()
+if __name__ == '__main__':
+    load_drive_data()
