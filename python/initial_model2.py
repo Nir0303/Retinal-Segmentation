@@ -41,7 +41,7 @@ if __name__ == "__main__":
     print(train_images.shape,train_images.shape[0])
 
     # load weights
-    CAFFE_WEIGHTS_DIR = "/home/nir0303/working/RetinaSegmentation/model/"
+    CAFFE_WEIGHTS_DIR = os.path.join(os.getcwd(), "model")
 
     W_conv1_1 = transform_conv_weight(np.load(os.path.join(CAFFE_WEIGHTS_DIR, "W_conv1_1.npy")))
     b_conv1_1 = np.load(os.path.join(CAFFE_WEIGHTS_DIR, "b_conv1_1.npy"))
@@ -151,7 +151,6 @@ if __name__ == "__main__":
 
     #output = Lambda(output_lambda,output_shape=output_of_lambda)(upscore_fuse)
 
-
     model = Model(inputs=[data_input], outputs=[upscore_fuse])
     model.compile(optimizer='rmsprop',
                   loss='binary_crossentropy',
@@ -159,7 +158,9 @@ if __name__ == "__main__":
 
     model.fit(train_images,train_labels,batch_size=10,epochs=1)
 
-    print(model.get_config())
+    #print(model.get_config())
     print(model.summary())
     #model.load_weights('model/3_class.h5')
 
+    plot_model(model, "model.png")
+    K.clear_session()

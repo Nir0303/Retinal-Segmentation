@@ -7,13 +7,13 @@ DATA_PATH = os.path.join(os.getcwd(), "data")
 
 
 def get_image_path(data_type="train", image_type="label"):
-    regex = re.compile(r".*_[1-8].png")
+    regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":
-        image_path = os.path.join(DATA_PATH, "train", "image")
+        image_path = os.path.join(DATA_PATH, "train", "images")
     elif data_type == "test" and image_type == "image":
-        image_path = os.path.join(DATA_PATH, "test", "image")
+        image_path = os.path.join(DATA_PATH, "test", "images")
     elif data_type == "test" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "test", "av")
 
@@ -25,19 +25,16 @@ def get_image_path(data_type="train", image_type="label"):
 
 
 def load_images(data_type="train", image_type="label"):
-    for index, image_path in enumerate(get_image_path()):
+    images_data = []
+    for index, image_path in enumerate(get_image_path(data_type,image_type)):
         image = Image.open(image_path)
         image_data = np.array(image.getdata(), np.float32)
-
         num_channels = len(image.getbands())
         image_data = image_data.reshape(image.size[1], image.size[0], num_channels)
 
-        if not index:
-            images_data = np.zeros((20, 3, 584, 565),dtype=np.float32)
-
         if image_type == "image":
-            image_data = image_data.transpose((2, 0, 1))
-            new_image_data = image_data.reshape(1, *image_data.shape)
+            new_image_data = image_data.transpose((2, 0, 1))
+            #new_image_data = image_data.reshape(1, *image_data.shape)
         if image_type == "label":
             r = image_data[..., 0]
             g = image_data[..., 1]
@@ -48,25 +45,25 @@ def load_images(data_type="train", image_type="label"):
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
             new_image_data = np.stack([artery, vein, overlap], 0)
-
-        images_data[index] = new_image_data
-        if index == 2:
-            break
-
+            new_image_data = new_image_data.astype(np.float32, copy=False)
+            #print(new_image_data)
+        try:
+            images_data.append(new_image_data)
+        except Exception as e:
+            print(images_data.shape)
+            print(new_image_data.shape)
+    images_data = np.array(images_data)
     return images_data
 
 
 def load_drive_data():
+
     train_images = load_images(data_type="train", image_type="image")
     train_labels = load_images(data_type="train", image_type="label")
     test_images = load_images(data_type="test", image_type="image")
     test_labels = load_images(data_type="test", image_type="label")
-    print(train_images.shape)
-    print(train_images.max(), train_images.argmax(axis=1), train_images.argmax(axis=0))
-    print(test_images.max(), test_images.argmax(axis=1), test_images.argmax(axis=0))
-    print(test_labels.max(), test_labels.argmax(axis=1), test_labels.argmax(axis=0) )
-    print(train_labels.max(), train_labels.argmax(axis=1), train_labels.argmax(axis=0))
 
+    return (train_images,train_labels,test_images,test_labels)
 
 
 if __name__ == '__main__':

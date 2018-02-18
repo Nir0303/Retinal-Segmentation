@@ -1,0 +1,9 @@
+conda create --name tensorflow3 python=3.5
+pip install --ignore-installed --upgrade  https://storage.googleapis.com/tensorflow/linux/cpu/tensorflow-1.5.0-cp35-cp35m-linux_x86_64.whl
+pip install keras
+pip install image
+pip install pydot
+pip install graphviz
+sudo apt install libgraphviz-dev
+conda install graphviz
+conda install pydotplus
