@@ -24,12 +24,10 @@ def transform_fc_weight(W):
     return W.T
 
 
-
 if __name__ == "__main__":
     input_shape = (3, 584, 565)
     K.set_image_data_format("channels_first")
-    #K._BACKEND = "theano"
-    #K.set_image_dim_ordering("th")
+
 
     data_input = Input(shape=input_shape, name="data_input", dtype="float32")
 
@@ -157,7 +155,8 @@ if __name__ == "__main__":
                   metrics=['accuracy'])
 
     model.fit(train_images,train_labels,batch_size=10,epochs=1)
-
+    t = model.predict(test_images,batch_size=10)
+    print(type(t))
     #print(model.get_config())
     print(model.summary())
     #model.load_weights('model/3_class.h5')
