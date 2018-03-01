@@ -188,5 +188,5 @@ if __name__ == '__main__':
     rm = RetinaModel()
     rm.create_model()
     rm.set_weights()
-    # rm.get_data()
-    # rm.run()
+    rm.get_data()
+    rm.run()
