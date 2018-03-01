@@ -19,7 +19,7 @@ from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 
 K.set_image_data_format("channels_first")
-# caffe.set_mode_cpu()
+caffe.set_mode_cpu()
 cur_dir = os.getcwd()
 MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
 MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
@@ -180,7 +180,7 @@ class RetinaModel(object):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
         print(test_accuracy)
-        np.save('data/test_predict.npy', test_predict)
+        np.save('cache/test_predict.npy', test_predict)
 
 
 if __name__ == '__main__':
