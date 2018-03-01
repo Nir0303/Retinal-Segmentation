@@ -4,7 +4,7 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-import caffe
+# import caffe
 import json
 import prepare_image
 import utility
@@ -19,7 +19,7 @@ from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 
 K.set_image_data_format("channels_first")
-caffe.set_mode_cpu()
+# caffe.set_mode_cpu()
 cur_dir = os.getcwd()
 MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
 MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
@@ -149,7 +149,7 @@ class RetinaModel(object):
             return
         net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
         for k, v in net.params.items():
-            w = np.transpose(v[0].data,(3, 2, 1, 0))
+            w = np.transpose(v[0].data, (2, 3, 1, 0))
             self.model.get_layer(name=mapping[k]).set_weights([w, v[1].data])
         if args.cache:
             self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
@@ -174,9 +174,12 @@ class RetinaModel(object):
             np.save('cache/data/test_labels.npy', self.test_labels)
 
     def run(self):
+        self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
+                           metrics=['accuracy'])
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=1)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
+        print(test_accuracy)
         np.save('data/test_predict.npy', test_predict)
 
 
@@ -185,5 +188,5 @@ if __name__ == '__main__':
     rm = RetinaModel()
     rm.create_model()
     rm.set_weights()
-    rm.get_data()
-    rm.run()
+    # rm.get_data()
+    # rm.run()
