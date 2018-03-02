@@ -18,3 +18,5 @@ cd $SCRATCH
 cd RetinaSegmentation
 
 python python/create_model.py --cache
+
+echo "ALL DONE!"
