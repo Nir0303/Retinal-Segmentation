@@ -18,7 +18,7 @@ source activate
 #move to working directory
 cd $HOME
 
-cd RetinaSegmentation
+cd Retinal-Segmentation
 
 python python/create_model.py --cache
 
