@@ -1,0 +1,20 @@
+!#/bin/bash
+#SBATCH -N 1
+#SBATCH -p GPU
+#SBATCH --gres=gpu:k80:1
+#SBATCH -t 00:30:00
+
+#echo commands to stdout
+set -x
+
+module load tensorflow/1.5_gpu
+module load keras/2.0.4
+
+source activate
+
+#move to working directory
+cd $SCRATCH
+
+cd RetinaSegmentation
+
+python python/create_model.py --cache
