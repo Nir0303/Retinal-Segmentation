@@ -1,7 +1,10 @@
-!#/bin/bash
+#!/bin/sh
+
 #SBATCH -N 1
 #SBATCH -p GPU
-#SBATCH --gres=gpu:k80:1
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=addankn@sunyit.edu
+#SBATCH --gres=gpu:k80:4
 #SBATCH -t 00:30:00
 
 #echo commands to stdout
@@ -13,7 +16,7 @@ module load keras/2.0.4
 source activate
 
 #move to working directory
-cd $SCRATCH
+cd $HOME
 
 cd RetinaSegmentation
 
