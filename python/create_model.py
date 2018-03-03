@@ -4,7 +4,7 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-import caffe
+# import caffe
 import json
 import prepare_image
 import utility
@@ -157,7 +157,7 @@ class RetinaModel(object):
         if args.cache and os.path.exists("cache/model_weights.h5"):
             self.model.load_weights("cache/model_weights.h5")
             return
-        net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
+        # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
         for k, v in net.params.items():
             w = np.transpose(v[0].data, (2, 3, 1, 0))
             self.model.get_layer(name=mapping[k]).set_weights([w, v[1].data])
