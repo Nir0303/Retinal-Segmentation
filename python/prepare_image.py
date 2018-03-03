@@ -3,7 +3,7 @@ import os
 import re
 from PIL import Image
 
-DATA_PATH = os.path.join(os.getcwd(), "image")
+DATA_PATH = os.path.join(os.getcwd(), "data")
 
 
 def get_image_path(data_type="train", image_type="label"):

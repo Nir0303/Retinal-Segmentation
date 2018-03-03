@@ -4,14 +4,14 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-# import caffe
+import caffe
 import json
 import prepare_image
 import utility
 
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
-from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
+from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation, Permute, BatchNormalization
 from keras.layers import MaxPooling2D
 from keras import backend as K
 from keras.metrics import binary_accuracy
@@ -19,7 +19,7 @@ from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 
 K.set_image_data_format("channels_first")
-# caffe.set_mode_cpu()
+caffe.set_mode_cpu()
 cur_dir = os.getcwd()
 MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
 MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
@@ -44,6 +44,12 @@ mapping = {
     'upsample8_': 'side_multi4_up',
     'new-score-weighting_av': 'upscore_fuse'
 }
+
+def depth_softmax(matrix):
+    sigmoid = lambda x: 1 / (1 + K.exp(-x))
+    sigmoided_matrix = sigmoid(matrix)
+    softmax_matrix = sigmoided_matrix / K.sum(sigmoided_matrix, axis=0)
+    return softmax_matrix
 
 
 def parse_args():
@@ -135,8 +141,12 @@ class RetinaModel(object):
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(3, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
+        test_deconv = Conv2DTranspose(3, 1, 1, border_mode='same', output_shape=(3, 584, 565))(upscore_fuse)
+        test_perm = Permute(dims=[2, 3, 1])(test_deconv)
+        test_batch = BatchNormalization()(test_perm)
+        test_softmax = Lambda(depth_softmax)(test_batch)
 
-        self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
+        self.model = Model(inputs=[data_input], outputs=[test_softmax])
 
         if args.cache:
             with open("cache/model.json", 'w') as json_file:
@@ -174,7 +184,7 @@ class RetinaModel(object):
             np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
-        self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
+        self.model.compile(optimizer='rmsprop', loss='categorical_crossentropy',
                            metrics=['accuracy'],)
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
@@ -189,4 +199,6 @@ if __name__ == '__main__':
     rm.create_model()
     rm.set_weights()
     rm.get_data()
+    plot_model(rm.model, "model.png")
     #rm.run()
+    K.clear_session()
