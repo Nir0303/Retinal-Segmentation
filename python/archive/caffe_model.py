@@ -3,7 +3,7 @@ import caffe
 import numpy as np
 import os
 
-DATA_DIR = "/path/to/my/data"
+DATA_DIR = "/path/to/my/image"
 OUTPUT_DIR = os.getcwd()
 
 
@@ -20,19 +20,19 @@ net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
 print(net.blobs)
 """
 for layer_name, blob in net.blobs.iteritems():
-    print(layer_name, blob.data.shape)
+    print(layer_name, blob.image.shape)
 """
 
 """
 for i in net.blobs:
-    print(i, net.blobs[i].data.shape)
+    print(i, net.blobs[i].image.shape)
 """
 
 # write out weight matrices and bias vectors
 for k, v in net.params.items():
     print(k, v[0].data.shape, v[1].data.shape)
-    # np.save(os.path.join(OUTPUT_DIR, "W_{:s}.npy".format(k)), v[0].data)
-    # np.save(os.path.join(OUTPUT_DIR, "b_{:s}.npy".format(k)), v[1].data)
+    # np.save(os.path.join(OUTPUT_DIR, "W_{:s}.npy".format(k)), v[0].image)
+    # np.save(os.path.join(OUTPUT_DIR, "b_{:s}.npy".format(k)), v[1].image)
 
 exit()
 # write out mean image

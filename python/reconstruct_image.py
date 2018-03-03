@@ -7,6 +7,6 @@ def build_image():
     for i in range(len(test_label)):
         image_data = np.array(test_label[0], dtype=np.int8).transpose(2,1,0)
         image = Image.fromarray(image_data, 'RGB')
-        image.save('data/predict/label_{}.png'.format(i))
+        image.save('image/predict/label_{}.png'.format(i))
 
 build_image()

@@ -3,7 +3,7 @@ import os
 import re
 from PIL import Image
 
-DATA_PATH = os.path.join(os.getcwd(), "data")
+DATA_PATH = os.path.join(os.getcwd(), "image")
 
 
 def get_image_path(data_type="train", image_type="label"):
@@ -45,7 +45,7 @@ def load_images(data_type="train", image_type="label"):
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
             new_image_data = np.stack([artery, vein, overlap], 0)
-            new_image_data = new_image_data.astype(np.float32, copy=False)
+            new_image_data = new_image_data.astype(np.int32, copy=False)
             #print(new_image_data)
         try:
             images_data.append(new_image_data)
@@ -63,7 +63,7 @@ def load_drive_data():
     test_images = load_images(data_type="test", image_type="image")
     test_labels = load_images(data_type="test", image_type="label")
 
-    return (train_images,train_labels,test_images,test_labels)
+    return train_images, train_labels, test_images, test_labels
 
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ def parse_args():
         :return:
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cache", "-c", help="Cache data wherever possible", action='store_true')
+    parser.add_argument("--cache", "-c", help="Cache image wherever possible", action='store_true')
     parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analyis",
                          default="INFO")
     args = parser.parse_args()
@@ -155,11 +155,11 @@ class RetinaModel(object):
             self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
 
     def get_data(self):
-        if args.cache and os.path.exists('cache/data'):
-            self.train_images = np.load('cache/data/train_images.npy')
-            self.train_labels = np.load('cache/data/train_labels.npy')
-            self.test_images = np.load('cache/data/test_images.npy')
-            self.test_labels = np.load('cache/data/test_labels.npy')
+        if args.cache and os.path.exists('cache/image'):
+            self.train_images = np.load('cache/image/train_images.npy')
+            self.train_labels = np.load('cache/image/train_labels.npy')
+            self.test_images = np.load('cache/image/test_images.npy')
+            self.test_labels = np.load('cache/image/test_labels.npy')
             return
 
         self.train_images = prepare_image.load_images(data_type="train", image_type="image")
@@ -167,16 +167,16 @@ class RetinaModel(object):
         self.test_images = prepare_image.load_images(data_type="test", image_type="image")
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label")
         if args.cache:
-            utility.create_directory('cache/data')
-            np.save('cache/data/train_images.npy', self.train_images)
-            np.save('cache/data/train_labels.npy', self.train_labels)
-            np.save('cache/data/test_images.npy', self.test_images)
-            np.save('cache/data/test_labels.npy', self.test_labels)
+            utility.create_directory('cache/image')
+            np.save('cache/image/train_images.npy', self.train_images)
+            np.save('cache/image/train_labels.npy', self.train_labels)
+            np.save('cache/image/test_images.npy', self.test_images)
+            np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=20000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
         print(test_accuracy)
@@ -189,4 +189,4 @@ if __name__ == '__main__':
     rm.create_model()
     rm.set_weights()
     rm.get_data()
-    rm.run()
+    #rm.run()
