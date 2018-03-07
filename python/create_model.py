@@ -4,7 +4,7 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-import caffe
+# import caffe
 import json
 import prepare_image
 import utility
@@ -147,7 +147,7 @@ class RetinaModel(object):
         if args.cache and os.path.exists("cache/model_weights.h5"):
             self.model.load_weights("cache/model_weights.h5")
             return
-        net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
+        # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
         for k, v in net.params.items():
             w = np.transpose(v[0].data, (2, 3, 1, 0))
             self.model.get_layer(name=mapping[k]).set_weights([w, v[1].data])
@@ -176,7 +176,7 @@ class RetinaModel(object):
     def run(self):
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=20000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
         print(test_accuracy)
@@ -189,5 +189,5 @@ if __name__ == '__main__':
     rm.create_model()
     rm.set_weights()
     rm.get_data()
-    #rm.run()
+    rm.run()
     K.clear_session()
