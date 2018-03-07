@@ -155,11 +155,11 @@ class RetinaModel(object):
             self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
 
     def get_data(self):
-        if args.cache and os.path.exists('cache/data'):
-            self.train_images = np.load('cache/data/train_images.npy')
-            self.train_labels = np.load('cache/data/train_labels.npy')
-            self.test_images = np.load('cache/data/test_images.npy')
-            self.test_labels = np.load('cache/data/test_labels.npy')
+        if args.cache and os.path.exists('cache/image'):
+            self.train_images = np.load('cache/image/train_images.npy')
+            self.train_labels = np.load('cache/image/train_labels.npy')
+            self.test_images = np.load('cache/image/test_images.npy')
+            self.test_labels = np.load('cache/image/test_labels.npy')
             return
 
         self.train_images = prepare_image.load_images(data_type="train", image_type="image")
@@ -174,6 +174,7 @@ class RetinaModel(object):
             np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
+        print(self.train_images.shape)
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)

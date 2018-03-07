@@ -13,7 +13,7 @@ set -x
 module load tensorflow/1.5_gpu
 module load keras/2.0.4
 
-#export TENSORFLOW_ENV=$TF_ENV
+export TENSORFLOW_ENV=$TF_ENV
 
 source $KERAS_ENV/bin/activate
 
