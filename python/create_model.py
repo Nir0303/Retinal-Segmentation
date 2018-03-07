@@ -4,7 +4,7 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-# import caffe
+import caffe
 import json
 import prepare_image
 import utility
@@ -167,11 +167,11 @@ class RetinaModel(object):
         self.test_images = prepare_image.load_images(data_type="test", image_type="image")
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label")
         if args.cache:
-            utility.create_directory('cache/data')
-            np.save('cache/data/train_images.npy', self.train_images)
-            np.save('cache/data/train_labels.npy', self.train_labels)
-            np.save('cache/data/test_images.npy', self.test_images)
-            np.save('cache/data/test_labels.npy', self.test_labels)
+            utility.create_directory('cache/image')
+            np.save('cache/image/train_images.npy', self.train_images)
+            np.save('cache/image/train_labels.npy', self.train_labels)
+            np.save('cache/image/test_images.npy', self.test_images)
+            np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
@@ -189,4 +189,5 @@ if __name__ == '__main__':
     rm.create_model()
     rm.set_weights()
     rm.get_data()
-    rm.run()
+    #rm.run()
+    K.clear_session()
