@@ -8,6 +8,7 @@ import tensorflow as tf
 import json
 import prepare_image
 import utility
+import threading
 
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
@@ -44,6 +45,26 @@ mapping = {
     'upsample8_': 'side_multi4_up',
     'new-score-weighting_av': 'upscore_fuse'
 }
+
+
+class CreateBatchGenerator(object):
+    def __init__(self, batch_size=32):
+        self.batch_size = 100
+        self.lock = threading.Lock()
+        self.train_images = np.load('cache/image/train_images.npy')
+        self.train_labels = np.load('cache/image/train_labels.npy')
+        self.counter = 0
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.lock:
+            if self.counter > self.batch_size:
+                raise StopIteration
+            else:
+                self.counter += 1
+                return self.train_images[1].reshape(1, *self.train_images[1].shape), self.train_images[1].reshape(1, *self.train_images[1].shape)
 
 
 def parse_args():
@@ -180,7 +201,8 @@ class RetinaModel(object):
             np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
-        validation_data = self.validation_data()
+        #validation_data = self.validation_data()
+        validation_data = CreateBatchGenerator()
 
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
