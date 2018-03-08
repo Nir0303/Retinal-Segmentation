@@ -70,7 +70,7 @@ class RetinaModel(object):
             with open("cache/model.json") as f:
                 self.model = model_from_json(json.dumps(json.load(f)))
             return
-        input_shape =(3, 584, 565)
+        input_shape = (3, 584, 565)
 
         data_input = Input(shape=input_shape, name="data_input", dtype="float32")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
@@ -157,12 +157,13 @@ class RetinaModel(object):
     def validation_data(self):
         train_images = np.load('cache/image/train_images.npy')
         train_labels = np.load('cache/image/train_labels.npy')
-        for image, label in zip(train_images,train_labels):
-            yield (image, label)
+
+        for i in range(10):
+            for image,label in zip(train_images,train_labels):
+                yield image.reshape(1, *image.shape),label.reshape(1, *image.shape)
 
     def get_data(self):
         if args.cache and os.path.exists('cache/image'):
-
             self.test_images = np.load('cache/image/test_images.npy')
             self.test_labels = np.load('cache/image/test_labels.npy')
             return
@@ -180,10 +181,10 @@ class RetinaModel(object):
 
     def run(self):
         validation_data = self.validation_data()
+
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
-        self.model.fit_generator(validation_data, steps_per_epoch=2, epochs=100,
-                       workers=3)
+        self.model.fit_generator(validation_data, steps_per_epoch=2, epochs=1, workers=3)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
         print(test_accuracy)
