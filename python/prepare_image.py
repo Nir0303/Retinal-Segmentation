@@ -28,9 +28,12 @@ def load_images(data_type="train", image_type="label"):
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type,image_type)):
         image = Image.open(image_path)
-        image_data = np.array(image.getdata(), np.float32)
+        #image.show()
+        image_data = np.array(image, np.float32)
         num_channels = len(image.getbands())
+        #Image.fromarray(np.uint8(image_data)).show()
         image_data = image_data.reshape(image.size[1], image.size[0], num_channels)
+
 
         if image_type == "image":
             new_image_data = image_data.transpose((2, 0, 1))
@@ -39,19 +42,24 @@ def load_images(data_type="train", image_type="label"):
             r = image_data[..., 0]
             g = image_data[..., 1]
             b = image_data[..., 2]
+            #Image.fromarray(np.uint8(g)).show()
+
             unknown = (np.minimum(b, r)) > 0
             # background = ((b+g+r) == 0)
             artery = (r - unknown) > 0
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
             new_image_data = np.stack([artery, vein, overlap], 0)
-            new_image_data = new_image_data.astype(np.float32, copy=False)
-            #print(new_image_data)
+
+            #Image.fromarray(np.uint8(new_image_data).transpose(1,2,0)).show()
+            #new_image_data = new_image_data.astype(np.float32, copy=False)
+
         try:
             images_data.append(new_image_data)
         except Exception as e:
             print(images_data.shape)
             print(new_image_data.shape)
+
     images_data = np.array(images_data)
     return images_data
 
