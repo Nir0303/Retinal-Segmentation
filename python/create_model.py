@@ -154,10 +154,15 @@ class RetinaModel(object):
         if args.cache:
             self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
 
+    def validation_data(self):
+        train_images = np.load('cache/image/train_images.npy')
+        train_labels = np.load('cache/image/train_labels.npy')
+        for image, label in zip(train_images,train_labels):
+            yield (image, label)
+
     def get_data(self):
         if args.cache and os.path.exists('cache/image'):
-            self.train_images = np.load('cache/image/train_images.npy')
-            self.train_labels = np.load('cache/image/train_labels.npy')
+
             self.test_images = np.load('cache/image/test_images.npy')
             self.test_labels = np.load('cache/image/test_labels.npy')
             return
@@ -174,10 +179,10 @@ class RetinaModel(object):
             np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
-        print(self.train_images.shape)
+        validation_data = self.validation_data()
         self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
-        self.model.fit_generator(self.train_images, self.train_labels, batch_size=10, epochs=100,
+        self.model.fit_generator(validation_data, steps_per_epoch=2, epochs=100,
                        workers=3)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         test_accuracy = binary_accuracy(self.test_labels, test_predict)
