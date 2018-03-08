@@ -70,9 +70,10 @@ class RetinaModel(object):
             with open("cache/model.json") as f:
                 self.model = model_from_json(json.dumps(json.load(f)))
             return
+            
         input_shape =(3, 584, 565)
 
-        data_input = Input(shape=input_shape, name="data_input", dtype="float32")
+        data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
                           padding="SAME")(data_input)
         conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_2",
@@ -134,7 +135,7 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(3, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='softmax', name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
@@ -179,6 +180,7 @@ class RetinaModel(object):
                            metrics=['accuracy'],)
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
+        print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
 
 
