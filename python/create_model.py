@@ -175,7 +175,7 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        self.model.compile(optimizer='rmsprop', loss='categorical_crossentropy',
+        self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
                            metrics=['accuracy'],)
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
