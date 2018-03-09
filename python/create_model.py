@@ -14,9 +14,11 @@ from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add
 from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
 from keras.layers import MaxPooling2D
 from keras import backend as K
+import keras.backend.tensorflow_backend as tfb
 from keras.metrics import binary_accuracy
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
+from keras.optimizers import SGD,Adam
 
 K.set_image_data_format("channels_first")
 # caffe.set_mode_cpu()
@@ -44,6 +46,34 @@ mapping = {
     'upsample8_': 'side_multi4_up',
     'new-score-weighting_av': 'upscore_fuse'
 }
+
+
+def sigmoid_cross_entropy_with_logits(target , output):
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(target=target,
+                                                   logits=output)
+    return tf.reduce_sum(loss)
+
+
+def weighted_binary_crossentropy(target, output):
+    """
+    Weighted binary crossentropy between an output tensor
+    and a target tensor. POS_WEIGHT is used as a multiplier
+    for the positive targets.
+
+    Combination of the following functions:
+    * keras.losses.binary_crossentropy
+    * keras.backend.tensorflow_backend.binary_crossentropy
+    * tf.nn.weighted_cross_entropy_with_logits
+    """
+    # transform back to logits
+    _epsilon = tfb._to_tensor(tfb.epsilon(), output.dtype.base_dtype)
+    output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
+    output = tf.log(output / (1 - output))
+    # compute weighted loss
+    loss = tf.nn.weighted_cross_entropy_with_logits(targets=target,
+                                                    logits=output,
+                                                    pos_weight=POS_WEIGHT)
+    return tf.reduce_mean(loss, axis=-1)
 
 
 def parse_args():
@@ -135,7 +165,7 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='softmax', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='sigmoid', name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
@@ -176,9 +206,10 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        self.model.compile(optimizer='rmsprop', loss='binary_crossentropy',
+        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+        self.model.compile(optimizer=sgd, loss=weighted_binary_crossentropy,
                            metrics=['accuracy'],)
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=20)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
@@ -190,5 +221,6 @@ if __name__ == '__main__':
     rm.create_model()
     rm.set_weights()
     rm.get_data()
+    # plot_model(rm.model,"model.png")
     rm.run()
     K.clear_session()

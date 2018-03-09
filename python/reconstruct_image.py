@@ -3,7 +3,7 @@ from PIL import Image
 
 
 def build_image():
-    test_label = np.load("cache/image/test_labels.npy")
+    test_label = np.load("cache/test_predict.npy")
     for i in range(len(test_label)):
         image = np.where(test_label[i]==True, 255, 0)
         image = Image.fromarray(np.uint8(image).transpose(1,2,0))
