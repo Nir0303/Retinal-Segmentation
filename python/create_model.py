@@ -8,6 +8,7 @@ import tensorflow as tf
 import json
 import prepare_image
 import utility
+import keras
 
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
@@ -207,12 +208,19 @@ class RetinaModel(object):
     def run(self):
         print(self.train_images.shape)
         sgd = SGD(lr=1e-8, decay=1e-6, momentum=0.9, nesterov=True)
+        """
+        weight_save_callback = keras.callback.ModelCheckpoint('/model/weights.hdf5', monitor='val_loss',
+                                                verbose=0, save_best_only=True, mode='auto')
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                           metrics=['accuracy'],)
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
+                           metrics=['accuracy'], callbacks=[weight_save_callback])
+        """
+        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
+                            metrics=['accuracy'])
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
+        self.model.save_weights(os.path.join('cache', 'keras_10000_model_weights.h5'))
 
 
 if __name__ == '__main__':
