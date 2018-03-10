@@ -49,9 +49,9 @@ mapping = {
 
 
 def sigmoid_cross_entropy_with_logits(target , output):
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(target=target,
+    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
-    return tf.reduce_sum(loss)
+    return tf.reduce_mean(loss,axis=-1)
 
 
 def weighted_binary_crossentropy(target, output):
@@ -206,10 +206,10 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-        self.model.compile(optimizer=sgd, loss=weighted_binary_crossentropy,
+        sgd = SGD(lr=1e-8, decay=1e-6, momentum=0.9, nesterov=True)
+        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                            metrics=['accuracy'],)
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=20)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
