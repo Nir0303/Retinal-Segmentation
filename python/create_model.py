@@ -231,5 +231,5 @@ if __name__ == '__main__':
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    # rm.run()
+    rm.run()
     K.clear_session()
