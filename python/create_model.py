@@ -25,8 +25,8 @@ K.set_image_data_format("channels_first")
 # caffe.set_mode_cpu()
 cur_dir = os.getcwd()
 MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
-#MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
-MODEL_WEIGHTS = os.path.join(cur_dir, 'model', '_iter_20000.caffemodel')
+# MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
+# MODEL_WEIGHTS = os.path.join(cur_dir, 'model', '_iter_20000.caffemodel')
 
 mapping = {
     'conv1_1': 'conv1_1',
@@ -177,8 +177,9 @@ class RetinaModel(object):
                 json_file.write(json_model)
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/model_weights.h5"):
-            self.model.load_weights("cache/model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_10000_model_weights.h5"):
+            # self.model.load_weights("cache/model_weights.h5")
+            self.model.load_weights("cache/keras_10000_model_weights.h5")
             return
         # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
         for k, v in net.params.items():
@@ -221,7 +222,7 @@ class RetinaModel(object):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
-        # self.model.save_weights(os.path.join('cache', 'keras_10000_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_15000_model_weights.h5'))
 
 
 if __name__ == '__main__':
