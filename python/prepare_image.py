@@ -28,7 +28,7 @@ def load_images(data_type="train", image_type="label"):
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type,image_type)):
         image = Image.open(image_path)
-        #image.show()
+        image.show()
         image_data = np.array(image, np.float32)
         num_channels = len(image.getbands())
         #Image.fromarray(np.uint8(image_data)).show()
@@ -49,9 +49,10 @@ def load_images(data_type="train", image_type="label"):
             artery = (r - unknown) > 0
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
-            new_image_data = np.stack([artery, vein, overlap], 0)
+            new_image_data = np.stack([artery, overlap, vein], 0)
 
-            #Image.fromarray(np.uint8(new_image_data).transpose(1,2,0)).show()
+            Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)).transpose(1,2,0)).show()
+            exit()
             #new_image_data = new_image_data.astype(np.float32, copy=False)
 
         try:
@@ -75,4 +76,5 @@ def load_drive_data():
 
 
 if __name__ == '__main__':
-    load_drive_data()
+    # load_drive_data()
+    test_labels = load_images (data_type="test", image_type="label")
