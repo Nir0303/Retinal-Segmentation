@@ -218,7 +218,7 @@ class RetinaModel(object):
         """
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
