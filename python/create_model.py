@@ -169,7 +169,9 @@ class RetinaModel(object):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='sigmoid', name="upscore_fuse")(concat_upscore)
 
-        self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
+        softmax_layer = Activation('softmax')(upscore_fuse)
+
+        self.model = Model(inputs=[data_input], outputs=[softmax_layer])
 
         if args.cache:
             with open("cache/model.json", 'w') as json_file:
@@ -218,11 +220,11 @@ class RetinaModel(object):
         """
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
-        np.save('cache/test_predict.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_15000_model_weights.h5'))
+        # np.save('cache/test_predict.npy', test_predict)
+        # self.model.save_weights(os.path.join('cache', 'keras_15000_model_weights.h5'))
 
 
 if __name__ == '__main__':
@@ -232,5 +234,5 @@ if __name__ == '__main__':
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    rm.run()
+    # rm.run()
     K.clear_session()
