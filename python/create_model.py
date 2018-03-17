@@ -167,11 +167,11 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='sigmoid', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='softmax', name="upscore_fuse")(concat_upscore)
 
-        softmax_layer = Activation('softmax')(upscore_fuse)
+        #softmax_layer = Activation('softmax')(upscore_fuse)
 
-        self.model = Model(inputs=[data_input], outputs=[softmax_layer])
+        self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
         if args.cache:
             with open("cache/model.json", 'w') as json_file:
@@ -179,9 +179,9 @@ class RetinaModel(object):
                 json_file.write(json_model)
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_10000_model_weights.h5"):
-            # self.model.load_weights("cache/model_weights.h5")
-            self.model.load_weights("cache/keras_10000_model_weights.h5")
+        if args.cache and os.path.exists("cache/model_weights.h5"):
+            self.model.load_weights("cache/model_weights.h5")
+            #self.model.load_weights("cache/keras_10000_model_weights.h5")
             return
         # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
         for k, v in net.params.items():
@@ -220,11 +220,11 @@ class RetinaModel(object):
         """
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=100)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
-        # np.save('cache/test_predict.npy', test_predict)
-        # self.model.save_weights(os.path.join('cache', 'keras_15000_model_weights.h5'))
+        np.save('cache/test_predict.npy', test_predict)
+        self.model.save_weights(os.path.join('cache', 'keras_softmax_10000_model_weights.h5'))
 
 
 if __name__ == '__main__':
@@ -234,5 +234,5 @@ if __name__ == '__main__':
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    # rm.run()
+    rm.run()
     K.clear_session()
