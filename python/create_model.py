@@ -25,7 +25,7 @@ K.set_image_data_format("channels_first")
 # caffe.set_mode_cpu()
 cur_dir = os.getcwd()
 MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
-# MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
+MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
 # MODEL_WEIGHTS = os.path.join(cur_dir, 'model', '_iter_20000.caffemodel')
 
 mapping = {
@@ -54,6 +54,13 @@ def sigmoid_cross_entropy_with_logits(target , output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
     return tf.reduce_mean(loss,axis=-1)
+
+
+def softmax_cross_entropy_with_logits(target, output):
+    loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=target,
+                                                      logits=output)
+    return tf.reduce_mean(loss,axis=-1)
+
 
 
 def weighted_binary_crossentropy(target, output):
@@ -167,7 +174,7 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(3, kernel_size=(1, 1),activation='softmax', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(3, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
 
         #softmax_layer = Activation('softmax')(upscore_fuse)
 
@@ -218,7 +225,7 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                            metrics=['accuracy'], callbacks=[weight_save_callback])
         """
-        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
+        self.model.compile(optimizer=sgd, loss=softmax_cross_entropy_with_logits,
                             metrics=['accuracy'])
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
