@@ -13,7 +13,7 @@ import keras
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
 from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
-from keras.layers import MaxPooling2D
+from keras.layers import MaxPooling2D, UpSampling2D
 from keras import backend as K
 import keras.backend.tensorflow_backend as tfb
 from keras.metrics import binary_accuracy
@@ -105,11 +105,7 @@ class RetinaModel(object):
         self.output = None
 
     def create_model(self):
-        if args.cache and os.path.exists("cache/model.json"):
-            with open("cache/model.json") as f:
-                self.model = model_from_json(json.dumps(json.load(f)))
-            return
-            
+
         input_shape =(3, 584, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
@@ -157,19 +153,17 @@ class RetinaModel(object):
                              padding="SAME")(conv4_3)
 
         # Deconvolution Layer1
-        side_multi2_up = Conv2DTranspose(16, kernel_size=(4, 4), strides=(2, 2),
-                                          padding="SAME", name="side_multi2_up")(conv2_2_16)
+        side_multi2_up = UpSampling2D(size=(2, 2), name="side_multi2_up")(conv2_2_16)
+
         upside_multi2 = Cropping2D(cropping=((0, 0),(0, 1)), name="upside_multi2")(side_multi2_up)
 
         # Decovolution Layer2
-        side_multi3_up = Conv2DTranspose(16, kernel_size=(8, 8), strides=(4, 4),
-                                          padding="VALID", name="side_multi3_up")(conv3_3_16)
-        upside_multi3 = Cropping2D(cropping=((2, 2),(3, 4)), name="upside_multi3")(side_multi3_up)
+        side_multi3_up = UpSampling2D(size=(4, 4), name="side_multi3_up")(conv3_3_16)
+        upside_multi3 = Cropping2D(cropping=((0, 0),(1, 2)), name="upside_multi3")(side_multi3_up)
 
         # Deconvolution Layer3
-        side_multi4_up = Conv2DTranspose(16, kernel_size=(16, 16), strides=(8, 8),
-                                          padding="VALID", name="side_multi4_up")(conv4_3_16)
-        upside_multi4 = Cropping2D(cropping=((4, 4),(5, 6)), name="upside_multi4")(side_multi4_up)
+        side_multi4_up = UpSampling2D(size=(8, 8), name="side_multi4_up")(conv4_3_16)
+        upside_multi4 = Cropping2D(cropping=((0, 0),(1, 2)), name="upside_multi4")(side_multi4_up)
 
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
@@ -179,11 +173,12 @@ class RetinaModel(object):
         #softmax_layer = Activation('softmax')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
-
+        """
         if args.cache:
             with open("cache/model.json", 'w') as json_file:
                 json_model = self.model.to_json()
                 json_file.write(json_model)
+        """
 
     def set_weights(self):
         if args.cache and os.path.exists("cache/model_weights.h5"):
@@ -238,9 +233,9 @@ if __name__ == '__main__':
     args = parse_args()
     rm = RetinaModel()
     rm.create_model()
-    print(rm.model.summary())
     rm.set_weights()
-    rm.get_data()
+    # rm.get_data()
     # plot_model(rm.model,"model.png")
-    rm.run()
+    # rm.run()
+    print(rm.model.summary())
     K.clear_session()
