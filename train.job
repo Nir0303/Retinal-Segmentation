@@ -5,7 +5,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=addankn@sunyit.edu
 #SBATCH --gres=gpu:k80:4
-#SBATCH -t 00:30:00
+#SBATCH -t 25:30:00
 
 #echo commands to stdout
 set -x
