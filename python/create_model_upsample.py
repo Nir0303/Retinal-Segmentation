@@ -220,22 +220,22 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                            metrics=['accuracy'], callbacks=[weight_save_callback])
         """
-        self.model.compile(optimizer=sgd, loss=softmax_cross_entropy_with_logits,
+        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_softmax_10000_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_5000_model_weights.h5'))
 
 
 if __name__ == '__main__':
     args = parse_args()
     rm = RetinaModel()
     rm.create_model()
-    rm.set_weights()
-    # rm.get_data()
+    # rm.set_weights()
+    rm.get_data()
     # plot_model(rm.model,"model.png")
-    # rm.run()
+    rm.run()
     print(rm.model.summary())
     K.clear_session()
