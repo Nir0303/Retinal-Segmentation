@@ -18,15 +18,15 @@ for image_index in range(len(test_label)):
             j1 = j[1]
             j2 = j[2]
             # print(j0,j1,j2)
-            if  j0 >= j1 and j0 >= j1:
+            if j0 >= j1 and j0 >= j1:
                 image[x, y, 0] = 255
             else:
                 image[x, y, 0] = 0
-            if  j1 >= j2 and j1 >= j0:
+            if j1 >= j2 and j1 >= j0:
                 image[x, y, 1] = 255
             else:
                 image[x, y, 1] = 0
-            if  j2 >= j1 and j2 >= j0:
+            if j2 >= j1 and j2 >= j0:
                 image[x, y, 2] = 255
             else:
                 image[x, y, 2] = 0

@@ -181,8 +181,8 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/model_weights.h5"):
-            self.model.load_weights("cache/model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_sigmoid_5000_model_weights.h5"):
+            self.model.load_weights("cache/keras_sigmoid_5000_model_weights.h5")
             #self.model.load_weights("cache/keras_10000_model_weights.h5")
             return
         # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
@@ -222,11 +222,11 @@ class RetinaModel(object):
         """
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_5000_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_15000_model_weights.h5'))
 
 
 if __name__ == '__main__':
