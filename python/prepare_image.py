@@ -3,7 +3,7 @@ import os
 import re
 from PIL import Image , ImageOps
 
-DATA_PATH = os.path.join(os.getcwd(), "data")
+DATA_PATH = os.path.join("/pylon5/ci4s83p/addankn", "data")
 
 
 def get_image_path(data_type="train", image_type="label"):
