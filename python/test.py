@@ -18,7 +18,7 @@ for image_index in range(len(test_label)):
             j1 = j[1]
             j2 = j[2]
             # print(j0,j1,j2)
-            if j0 >= j1 and j0 >= j1:
+            if j0 >= j1 and j0 >= j2:
                 image[x, y, 0] = 255
             else:
                 image[x, y, 0] = 0
@@ -30,10 +30,11 @@ for image_index in range(len(test_label)):
                 image[x, y, 2] = 255
             else:
                 image[x, y, 2] = 0
-    # print(np.max(image, axis=2))
-    # print(np.argmax(image, axis=2))
+
     image[..., [1, 2]] = image[..., [2, 1]]
     # print(image.shape)
+    # print(np.max(image, axis=2))
+    # print(np.argmax(image, axis=2))
     image = Image.fromarray(np.uint8(image), mode='RGB')
     image.save('data/predict/label_{}.png'.format(image_index))
-#image.show()
+# image.show()

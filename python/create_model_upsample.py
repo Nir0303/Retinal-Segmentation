@@ -4,7 +4,6 @@ import os
 import argparse
 import numpy as np
 import tensorflow as tf
-# import caffe
 import json
 import prepare_image
 import utility
@@ -16,38 +15,12 @@ from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Act
 from keras.layers import MaxPooling2D, UpSampling2D
 from keras import backend as K
 import keras.backend.tensorflow_backend as tfb
-from keras.metrics import binary_accuracy
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import SGD,Adam
 
 K.set_image_data_format("channels_first")
-# caffe.set_mode_cpu()
 cur_dir = os.getcwd()
-MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
-MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
-# MODEL_WEIGHTS = os.path.join(cur_dir, 'model', '_iter_20000.caffemodel')
-
-mapping = {
-    'conv1_1': 'conv1_1',
-    'conv1_2': 'conv1_2',
-    'conv2_1': 'conv2_1',
-    'conv2_2': 'conv2_2',
-    'conv3_1': 'conv3_1',
-    'conv3_2': 'conv3_2',
-    'conv3_3': 'conv3_3',
-    'conv4_1': 'conv4_1',
-    'conv4_2': 'conv4_2',
-    'conv4_3': 'conv4_3',
-    'conv1_2_16': 'conv1_2_16',
-    'conv2_2_16': 'conv2_2_16',
-    'conv3_3_16': 'conv3_3_16',
-    'conv4_3_16': 'conv4_3_16',
-    'upsample2_': 'side_multi2_up',
-    'upsample4_': 'side_multi3_up',
-    'upsample8_': 'side_multi4_up',
-    'new-score-weighting_av': 'upscore_fuse'
-}
 
 
 def sigmoid_cross_entropy_with_logits(target , output):
@@ -106,7 +79,7 @@ class RetinaModel(object):
 
     def create_model(self):
 
-        input_shape =(3, 584, 565)
+        input_shape =(3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
@@ -155,22 +128,20 @@ class RetinaModel(object):
         # Deconvolution Layer1
         side_multi2_up = UpSampling2D(size=(2, 2), name="side_multi2_up")(conv2_2_16)
 
-        upside_multi2 = Cropping2D(cropping=((0, 0),(0, 1)), name="upside_multi2")(side_multi2_up)
+        upside_multi2 = Cropping2D(cropping=((0, 1),(0, 1)), name="upside_multi2")(side_multi2_up)
 
         # Decovolution Layer2
         side_multi3_up = UpSampling2D(size=(4, 4), name="side_multi3_up")(conv3_3_16)
-        upside_multi3 = Cropping2D(cropping=((0, 0),(1, 2)), name="upside_multi3")(side_multi3_up)
+        upside_multi3 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi3")(side_multi3_up)
 
         # Deconvolution Layer3
         side_multi4_up = UpSampling2D(size=(8, 8), name="side_multi4_up")(conv4_3_16)
-        upside_multi4 = Cropping2D(cropping=((0, 0),(1, 2)), name="upside_multi4")(side_multi4_up)
+        upside_multi4 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi4")(side_multi4_up)
 
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(3, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
-
-        #softmax_layer = Activation('softmax')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
         """
@@ -181,16 +152,10 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_sigmoid_15000_model_weights.h5"):
-            self.model.load_weights("cache/keras_sigmoid_15000_model_weights.h5")
-            #self.model.load_weights("cache/keras_10000_model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_sigmoid_5000_model_weights.h5"):
+            self.model.load_weights("cache/keras_sigmoid_5000_model_weights.h5")
             return
-        # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
-        for k, v in net.params.items():
-            w = np.transpose(v[0].data, (2, 3, 1, 0))
-            self.model.get_layer(name=mapping[k]).set_weights([w, v[1].data])
-        if args.cache:
-            self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
+
 
     def get_data(self):
         if args.cache and os.path.exists('cache/image'):
@@ -222,18 +187,19 @@ class RetinaModel(object):
         """
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
+
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_25000_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_5000_model_weights.h5'))
 
 
 if __name__ == '__main__':
     args = parse_args()
     rm = RetinaModel()
     rm.create_model()
-    # rm.set_weights()
+    rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
     rm.run()
