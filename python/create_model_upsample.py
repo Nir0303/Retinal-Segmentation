@@ -193,11 +193,11 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=2000)
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=1200)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         np.save('cache/test_predict2.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_4000_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_3200_model_weights.h5'))
 
 
 if __name__ == '__main__':
