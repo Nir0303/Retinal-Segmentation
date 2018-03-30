@@ -3,11 +3,12 @@ import os
 import re
 from PIL import Image , ImageOps
 
-DATA_PATH = os.path.join("/pylon5/ci4s83p/addankn", "data")
+pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
+DATA_PATH = os.path.join(pylon5, "data")
 
 
 def get_image_path(data_type="train", image_type="label"):
-    regex = re.compile(r"(.*\.tif)")
+    regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":

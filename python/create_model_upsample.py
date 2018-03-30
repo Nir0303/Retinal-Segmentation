@@ -152,8 +152,8 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_sigmoid_2000_model_weights.h5"):
-            self.model.load_weights("cache/keras_sigmoid_2000_model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_sigmoid_3200_model_weights.h5"):
+            self.model.load_weights("cache/keras_sigmoid_3200_model_weights.h5")
             return
 
 
@@ -194,20 +194,24 @@ class RetinaModel(object):
                             metrics=['accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=1200)
-        test_predict = self.model.predict(self.test_images, batch_size=10)
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_3200_model_weights.h5'))
+
+    def predict(self):
+        test_predict = self.model.predict(self.test_images, batch_size=1)
         print(test_predict[0])
         np.save('cache/test_predict2.npy', test_predict)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_3200_model_weights.h5'))
 
 
 if __name__ == '__main__':
-    pylon5_cache = os.path.join(os.environ["SCRATCH"],'cache')
+    pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
+    pylon5_cache = os.path.join(pylon5, 'cache')
     args = parse_args()
     rm = RetinaModel()
     rm.create_model()
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    rm.run()
+    # rm.run()
+    rm.predict()
     print(rm.model.summary())
     K.clear_session()
