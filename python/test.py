@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 from scipy.special import expit
-test_label = np.load("cache/test_predict.npy")
+test_label = np.load("cache/test_predict2.npy")
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
