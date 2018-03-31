@@ -152,34 +152,33 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_sigmoid_8200_model_weights.h5"):
-            self.model.load_weights("cache/keras_sigmoid_8200_model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_sigmoid_13200_model_weights.h5"):
+            self.model.load_weights("cache/keras_sigmoid_13200_model_weights.h5")
             return
 
 
     def get_data(self):
         cache_image = os.path.join(pylon5_cache,'image')
-        """
+
         if args.cache and os.path.exists(cache_image):
-            self.train_images = np.load(os.path.join(cache_image,'train_images.npy'))
-            self.train_labels = np.load(os.path.join(cache_image,'train_labels.npy')
-            self.test_images = np.load(os.path.join(cache_image,'test_images.npy'))
-            self.test_labels = np.load(os.path.join(cache_image,'test_labels.npy'))
+            self.train_images = np.load(os.path.join(cache_image, 'train_images.npy'))
+            self.train_labels = np.load(os.path.join(cache_image, 'train_labels.npy'))
+            self.test_images = np.load(os.path.join(cache_image, 'test_images.npy'))
+            self.test_labels = np.load(os.path.join(cache_image, 'test_labels.npy'))
             return
-        """
 
         self.train_images = prepare_image.load_images(data_type="train", image_type="image")
         self.train_labels = prepare_image.load_images(data_type="train", image_type="label")
         self.test_images = prepare_image.load_images(data_type="test", image_type="image")
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label")
-        """ 
+
         if args.cache:
             utility.create_directory(cache_image)
-            np.save(os.path.join(cache_image,'train_images.npy'), self.train_images)
-            np.save(os.path.join(cache_image,'train_labels.npy'), self.train_labels)
-            np.save(os.path.join(cache_image,'test_images.npy'), self.test_images)
-            np.save(os.path.join(cache_image,'test_labels.npy'), self.test_labels)
-        """ 
+            np.save(os.path.join(cache_image, 'train_images.npy'), self.train_images)
+            np.save(os.path.join(cache_image, 'train_labels.npy'), self.train_labels)
+            np.save(os.path.join(cache_image, 'test_images.npy'), self.test_images)
+            np.save(os.path.join(cache_image, 'test_labels.npy'), self.test_labels)
+
 
     def run(self):
         print(self.train_images.shape)
@@ -194,7 +193,7 @@ class RetinaModel(object):
                             metrics=['accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_13200_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_18200_model_weights.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
