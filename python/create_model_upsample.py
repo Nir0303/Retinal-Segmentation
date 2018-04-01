@@ -152,8 +152,8 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_sigmoid_13200_model_weights.h5"):
-            self.model.load_weights("cache/keras_sigmoid_13200_model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_sigmoid_18200_model_weights.h5"):
+            self.model.load_weights("cache/keras_sigmoid_18200_model_weights.h5")
             return
 
 
@@ -184,7 +184,7 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-7, decay=1e-6, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-6, decay=1e-6, momentum=0.9, nesterov=True)
         """
         weight_save_callback = keras.callback.ModelCheckpoint('/model/weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
@@ -195,7 +195,7 @@ class RetinaModel(object):
                             metrics=['accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=5000)
-        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_18200_model_weights.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_sigmoid_23200_model_weights.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
