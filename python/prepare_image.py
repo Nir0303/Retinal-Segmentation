@@ -19,7 +19,7 @@ def get_image_path(data_type="train", image_type="label"):
         image_path = os.path.join(DATA_PATH, "test", "av")
 
     for dir_path, sub_dirs, file_names in os.walk(image_path):
-        for file_name in file_names:
+        for file_name in sorted(file_names):
             if regex.match(file_name):
                 continue
             yield os.path.join(dir_path, file_name)
@@ -29,15 +29,20 @@ def load_images(data_type="train", image_type="label"):
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type,image_type)):
         image = Image.open(image_path)
-        image = ImageOps.fit(image,size=(565,565))
+        # image = ImageOps.fit(image, size=(565,565))
         # image.show()
         image_data = np.array(image, np.float32)
+        if image_data.shape == (584, 565, 3):
+            image_data = image_data[9:574,:,:]
+        else:
+            image_data = image_data[:,9:574, :]
         if image_type == "image":
             image_data -= np.array((171.0773, 98.4333, 58.8811))
+
         num_channels = len(image.getbands())
         # Image.fromarray(np.uint8(image_data)).show()
         # exit()
-        image_data = image_data.reshape(image.size[1], image.size[0], num_channels)
+        image_data = image_data.reshape(image_data.shape[1], image_data.shape[0], num_channels)
         if image_type == "image":
             new_image_data = image_data.transpose((2, 0, 1))
             #new_image_data = image_data.reshape(1, *image_data.shape)
@@ -80,7 +85,7 @@ def load_drive_data():
 
 if __name__ == '__main__':
     # load_drive_data()
-    test_labels = load_images (data_type="test", image_type="image")
+    test_labels = load_images(data_type="test", image_type="image")
     train_images, train_labels, test_images, test_labels = load_drive_data()
     print(train_images.shape)
     print(train_labels.shape)
