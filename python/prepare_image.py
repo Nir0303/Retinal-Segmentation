@@ -8,7 +8,8 @@ DATA_PATH = os.path.join(pylon5, "data")
 
 
 def get_image_path(data_type="train", image_type="label"):
-    regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
+    # regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
+    regex = re.compile(r"(.*\.tif)")
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":

@@ -194,7 +194,7 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights.h5'))
 
     def predict(self):
