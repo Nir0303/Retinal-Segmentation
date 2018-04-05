@@ -26,11 +26,10 @@ def get_image_path(data_type="train", image_type="label"):
             yield os.path.join(dir_path, file_name)
 
 
-def load_images(data_type="train", image_type="label"):
+def load_images(data_type="train", image_type="label", classification=None):
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type,image_type)):
         image = Image.open(image_path)
-        # image = ImageOps.fit(image, size=(565,565))
         # image.show()
         image_data = np.array(image, np.float32)
         if image_data.shape == (584, 565, 3):
@@ -41,29 +40,30 @@ def load_images(data_type="train", image_type="label"):
             image_data -= np.array((171.0773, 98.4333, 58.8811))
 
         num_channels = len(image.getbands())
-        # Image.fromarray(np.uint8(image_data)).show()
-        # exit()
         image_data = image_data.reshape(image_data.shape[1], image_data.shape[0], num_channels)
         if image_type == "image":
             new_image_data = image_data.transpose((2, 0, 1))
-            #new_image_data = image_data.reshape(1, *image_data.shape)
         if image_type == "label":
             r = image_data[..., 0]
             g = image_data[..., 1]
             b = image_data[..., 2]
-            #Image.fromarray(np.uint8(g)).show()
-
-            unknown = (np.minimum(b, r)) > 0
-            # background = ((b+g+r) == 0)
+            unknown = (np.minimum (b, r)) > 0
             artery = (r - unknown) > 0
             vein = (b - unknown) > 0
             overlap = (g - unknown) > 0
-            new_image_data = np.stack([artery, overlap, vein], 0)
+            if classification == 3:
+                # background = ((b+g+r) == 0)
+                new_image_data = np.stack([artery, overlap, vein], 0)
+            elif classification == 4:
+                background = ((b + g + r) == 0)
+                new_image_data = np.stack([artery, overlap, vein,background], 0)
+            elif classification == 2:
+                optic_nerve = artery | overlap | vein
+                new_image_data = np.stack([optic_nerve], 0)
+                # new_image_data = new_image_data.reshape(565,565)
+                # Image.fromarray(np.uint8(np.where (new_image_data, 255, 0)), mode='L').show()
 
-            # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)).transpose(1,2,0)).show()
-
-            #new_image_data = new_image_data.astype(np.float32, copy=False)
-
+            # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0))).show()
         try:
             images_data.append(new_image_data)
         except Exception as e:
@@ -74,20 +74,19 @@ def load_images(data_type="train", image_type="label"):
     return images_data
 
 
-def load_drive_data():
-
-    train_images = load_images(data_type="train", image_type="image")
-    train_labels = load_images(data_type="train", image_type="label")
-    test_images = load_images(data_type="test", image_type="image")
-    test_labels = load_images(data_type="test", image_type="label")
+def load_drive_data(classification=3):
+    train_images = load_images(data_type="train", image_type="image", classification=classification)
+    train_labels = load_images(data_type="train", image_type="label", classification=classification)
+    test_images = load_images(data_type="test", image_type="image", classification=classification)
+    test_labels = load_images(data_type="test", image_type="label", classification=classification)
 
     return train_images, train_labels, test_images, test_labels
 
 
 if __name__ == '__main__':
     # load_drive_data()
-    test_labels = load_images(data_type="test", image_type="image")
-    train_images, train_labels, test_images, test_labels = load_drive_data()
+    # test_labels = load_images(data_type="test", image_type="label", classification=2)
+    train_images, train_labels, test_images, test_labels = load_drive_data(classification=2)
     print(train_images.shape)
     print(train_labels.shape)
     print(test_images.shape)

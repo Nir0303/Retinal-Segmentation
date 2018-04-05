@@ -23,7 +23,7 @@ K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
 
 
-def sigmoid_cross_entropy_with_logits(target , output):
+def sigmoid_cross_entropy_with_logits(target, output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
     return tf.reduce_mean(loss,axis=-1)
@@ -65,7 +65,9 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--cache", "-c", help="Cache data wherever possible", action='store_true')
-    parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analyis",
+    parser.add_argument("--classification", "-t", help="Cache data wherever possible",
+                        default=4, type=int)
+    parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analysis",
                          default="INFO")
     args = parser.parse_args()
     return args
@@ -79,7 +81,7 @@ class RetinaModel(object):
 
     def create_model(self):
 
-        input_shape =(3, 565, 565)
+        input_shape = (3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
@@ -157,7 +159,7 @@ class RetinaModel(object):
             return
 
 
-    def get_data(self):
+    def get_data(self,classification=3):
         """
         cache_image = os.path.join(pylon5_cache,'image')
 
@@ -168,10 +170,14 @@ class RetinaModel(object):
             self.test_labels = np.load(os.path.join(cache_image, 'test_labels.npy'))
             return
         """
-        self.train_images = prepare_image.load_images(data_type="train", image_type="image")
-        self.train_labels = prepare_image.load_images(data_type="train", image_type="label")
-        self.test_images = prepare_image.load_images(data_type="test", image_type="image")
-        self.test_labels = prepare_image.load_images(data_type="test", image_type="label")
+        self.train_images = prepare_image.load_images(data_type="train", image_type="image",
+                                                      classification=classification)
+        self.train_labels = prepare_image.load_images(data_type="train", image_type="label",
+                                                      classification = classification)
+        self.test_images = prepare_image.load_images(data_type="test", image_type="image",
+                                                     classification=classification)
+        self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
+                                                     classification=classification)
         """
         if args.cache:
             utility.create_directory(cache_image)
@@ -180,7 +186,6 @@ class RetinaModel(object):
             np.save(os.path.join(cache_image, 'test_images.npy'), self.test_images)
             np.save(os.path.join(cache_image, 'test_labels.npy'), self.test_labels)
         """
-
 
     def run(self):
         print(self.train_images.shape)
@@ -210,9 +215,9 @@ if __name__ == '__main__':
     rm = RetinaModel()
     rm.create_model()
     rm.set_weights()
-    rm.get_data()
+    rm.get_data(args.classification)
     # plot_model(rm.model,"model.png")
     rm.run()
     rm.predict()
-    print(rm.model.summary())
+    # print(rm.model.summary())
     K.clear_session()
