@@ -143,7 +143,7 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(3, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(1, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
         """
@@ -199,12 +199,13 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=500)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
+        print(test_predict.shape)
         np.save('cache/test_predict2.npy', test_predict)
 
 
