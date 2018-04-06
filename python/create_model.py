@@ -153,7 +153,9 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights.h5"):
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_1class.h5"):
+            self.model.load_weights("cache/keras_crop_model_weights_1class.h5")
+            return
             with open("cache/3_class_model.json") as f:
                 model_3class = model_from_json(json.dumps(json.load(f)))
             model_3class.load_weights("cache/keras_crop_model_weights.h5")
@@ -168,8 +170,8 @@ class RetinaModel(object):
         utility.create_directory(cache_image)
         output_file = os.path.join(cache_image,name+'.h5')
         with h5py.File(output_file, "w") as f:
-            f.create_dataset(name, data=data, dtype=data.dtype)
-    
+            f.create_dataset('image', data=data, dtype=data.dtype)
+
     @staticmethod
     def _load_hdf5(input_file):
         with h5py.File(input_file, "r") as f:  # "with" close the file after its nested commands
