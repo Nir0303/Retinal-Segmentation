@@ -162,10 +162,6 @@ class RetinaModel(object):
                 if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3 :
                     layer.set_weights(layer3.get_weights())
 
-            for layer in self.model.layers:
-                if layer.get_weights():
-                    print(layer.get_weights())
-                    break
     @staticmethod
     def _write_hdf5(name, data):
         cache_image = os.path.join('cache', 'image')
@@ -235,7 +231,7 @@ if __name__ == '__main__':
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    # rm.run()
-    # rm.predict()
+    rm.run()
+    rm.predict()
     # print(rm.model.summary())
     K.clear_session()
