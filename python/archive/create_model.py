@@ -1,30 +1,56 @@
 #!/usr/bin/env python3
-import sys
+
 import os
 import argparse
 import numpy as np
 import tensorflow as tf
+# import caffe
 import json
 import prepare_image
 import utility
-import h5py
 import keras
 
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Lambda
 from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
-from keras.layers import MaxPooling2D, UpSampling2D
+from keras.layers import MaxPooling2D
 from keras import backend as K
 import keras.backend.tensorflow_backend as tfb
+from keras.metrics import binary_accuracy
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import SGD,Adam
 
 K.set_image_data_format("channels_first")
+# caffe.set_mode_cpu()
 cur_dir = os.getcwd()
+MODEL_PROTO = os.path.join(cur_dir, 'model', 'train.prototxt')
+MODEL_WEIGHTS = os.path.join(cur_dir, 'model', 'train_start.caffemodel')
+# MODEL_WEIGHTS = os.path.join(cur_dir, 'model', '_iter_20000.caffemodel')
+
+mapping = {
+    'conv1_1': 'conv1_1',
+    'conv1_2': 'conv1_2',
+    'conv2_1': 'conv2_1',
+    'conv2_2': 'conv2_2',
+    'conv3_1': 'conv3_1',
+    'conv3_2': 'conv3_2',
+    'conv3_3': 'conv3_3',
+    'conv4_1': 'conv4_1',
+    'conv4_2': 'conv4_2',
+    'conv4_3': 'conv4_3',
+    'conv1_2_16': 'conv1_2_16',
+    'conv2_2_16': 'conv2_2_16',
+    'conv3_3_16': 'conv3_3_16',
+    'conv4_3_16': 'conv4_3_16',
+    'upsample2_': 'side_multi2_up',
+    'upsample4_': 'side_multi3_up',
+    'upsample8_': 'side_multi4_up',
+    'new-score-weighting_av': 'upscore_fuse'
+}
 
 
-def sigmoid_cross_entropy_with_logits(target, output):
+def sigmoid_cross_entropy_with_logits(target , output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
     return tf.reduce_mean(loss,axis=-1)
@@ -34,6 +60,8 @@ def softmax_cross_entropy_with_logits(target, output):
     loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=target,
                                                       logits=output)
     return tf.reduce_mean(loss,axis=-1)
+
+
 
 def weighted_binary_crossentropy(target, output):
     """
@@ -49,7 +77,7 @@ def weighted_binary_crossentropy(target, output):
     # transform back to logits
     _epsilon = tfb._to_tensor(tfb.epsilon(), output.dtype.base_dtype)
     output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
-    output = tf.log(output /(1 - output))
+    output = tf.log(output / (1 - output))
     # compute weighted loss
     loss = tf.nn.weighted_cross_entropy_with_logits(targets=target,
                                                     logits=output,
@@ -64,24 +92,24 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("--cache", "-c", help="Cache data wherever possible", action='store_true')
-    parser.add_argument("--classification", "-t", help="Cache data wherever possible",
-                        default=4, type=int)
-    parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analysis",
+    parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analyis",
                          default="INFO")
     args = parser.parse_args()
     return args
 
 
 class RetinaModel(object):
-    def __init__(self, classification=3):
+    def __init__(self):
         self.model = None
         self.input = None
         self.output = None
-        self._classification = classification
 
     def create_model(self):
-        input_shape =(3, 565, 565)
-
+        if args.cache and os.path.exists("cache/model.json"):
+            with open("cache/model.json") as f:
+                self.model = model_from_json(json.dumps(json.load(f)))
+            return
+        input_shape =(3, 584, 565)
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
                           padding="SAME")(data_input)
@@ -127,117 +155,90 @@ class RetinaModel(object):
                              padding="SAME")(conv4_3)
 
         # Deconvolution Layer1
-        side_multi2_up = UpSampling2D(size=(2, 2), name="side_multi2_up")(conv2_2_16)
-
-        upside_multi2 = Cropping2D(cropping=((0, 1),(0, 1)), name="upside_multi2")(side_multi2_up)
+        side_multi2_up = Conv2DTranspose(16, kernel_size=(4, 4), strides=(2, 2),
+                                          padding="SAME", name="side_multi2_up")(conv2_2_16)
+        upside_multi2 = Cropping2D(cropping=((0, 0),(0, 1)), name="upside_multi2")(side_multi2_up)
 
         # Decovolution Layer2
-        side_multi3_up = UpSampling2D(size=(4, 4), name="side_multi3_up")(conv3_3_16)
-        upside_multi3 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi3")(side_multi3_up)
+        side_multi3_up = Conv2DTranspose(16, kernel_size=(8, 8), strides=(4, 4),
+                                          padding="VALID", name="side_multi3_up")(conv3_3_16)
+        upside_multi3 = Cropping2D(cropping=((2, 2),(3, 4)), name="upside_multi3")(side_multi3_up)
 
         # Deconvolution Layer3
-        side_multi4_up = UpSampling2D(size=(8, 8), name="side_multi4_up")(conv4_3_16)
-        upside_multi4 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi4")(side_multi4_up)
+        side_multi4_up = Conv2DTranspose(16, kernel_size=(16, 16), strides=(8, 8),
+                                          padding="VALID", name="side_multi4_up")(conv4_3_16)
+        upside_multi4 = Cropping2D(cropping=((4, 4),(5, 6)), name="upside_multi4")(side_multi4_up)
 
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(3, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
+
+        #softmax_layer = Activation('softmax')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
-        """
+
         if args.cache:
             with open("cache/model.json", 'w') as json_file:
                 json_model = self.model.to_json()
                 json_file.write(json_model)
-        """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights.h5"):
-            with open("cache/3_class_model.json") as f:
-                model_3class = model_from_json(json.dumps(json.load(f)))
-            model_3class.load_weights("cache/keras_crop_model_weights.h5")
-
-            for layer, layer3 in zip(self.model.layers, model_3class.layers):
-                if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3 :
-                    layer.set_weights(layer3.get_weights())
-
-            for layer in self.model.layers:
-                if layer.get_weights():
-                    print(layer.get_weights())
-                    break
-    @staticmethod
-    def _write_hdf5(name, data):
-        cache_image = os.path.join('cache', 'image')
-        utility.create_directory(cache_image)
-        output_file = os.path.join(cache_image,name+'.h5')
-        with h5py.File(output_file, "w") as f:
-            f.create_dataset(name, data=data, dtype=data.dtype)
-    
-    @staticmethod
-    def _load_hdf5(input_file):
-        with h5py.File(input_file, "r") as f:  # "with" close the file after its nested commands
-            return f["image"][()]
+        if args.cache and os.path.exists("cache/model_weights.h5"):
+            self.model.load_weights("cache/model_weights.h5")
+            #self.model.load_weights("cache/keras_10000_model_weights.h5")
+            return
+        # net = caffe.Net(MODEL_PROTO, MODEL_WEIGHTS, caffe.TEST)
+        for k, v in net.params.items():
+            w = np.transpose(v[0].data, (2, 3, 1, 0))
+            self.model.get_layer(name=mapping[k]).set_weights([w, v[1].data])
+        if args.cache:
+            self.model.save_weights(os.path.join('cache', 'model_weights.h5'))
 
     def get_data(self):
-        cache_image = os.path.join(pylon5_cache,'image')
-        if args.cache and os.path.exists(cache_image):
-            self.train_images = self._load_hdf5(os.path.join(cache_image, 'train_images.h5'))
-            self.train_labels = self._load_hdf5(os.path.join(cache_image, 'train_labels.h5'))
-            self.test_images = self._load_hdf5(os.path.join(cache_image, 'test_images.h5'))
-            self.test_labels = self._load_hdf5(os.path.join(cache_image, 'test_labels.h5'))
+        if args.cache and os.path.exists('cache/image'):
+            self.train_images = np.load('cache/image/train_images.npy')
+            self.train_labels = np.load('cache/image/train_labels.npy')
+            self.test_images = np.load('cache/image/test_images.npy')
+            self.test_labels = np.load('cache/image/test_labels.npy')
             return
 
-        self.train_images = prepare_image.load_images(data_type="train", image_type="image",
-                                                      classification=self._classification)
-        self.train_labels = prepare_image.load_images(data_type="train", image_type="label",
-                                                      classification=self._classification)
-        self.test_images = prepare_image.load_images(data_type="test", image_type="image",
-                                                     classification=self._classification)
-        self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
-                                                     classification=self._classification)
-
-        if args.cache and not os.path.exists(cache_image):
-            utility.create_directory(cache_image)
-            self._write_hdf5('train_images', self.train_images)
-            self._write_hdf5('train_labels', self.train_labels)
-            self._write_hdf5('test_images', self.test_images)
-            self._write_hdf5('test_labels', self.test_labels)
-
+        self.train_images = prepare_image.load_images(data_type="train", image_type="image")
+        self.train_labels = prepare_image.load_images(data_type="train", image_type="label")
+        self.test_images = prepare_image.load_images(data_type="test", image_type="image")
+        self.test_labels = prepare_image.load_images(data_type="test", image_type="label")
+        if args.cache:
+            utility.create_directory('cache/image')
+            np.save('cache/image/train_images.npy', self.train_images)
+            np.save('cache/image/train_labels.npy', self.train_labels)
+            np.save('cache/image/test_images.npy', self.test_images)
+            np.save('cache/image/test_labels.npy', self.test_labels)
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-6, decay=1e-4, momentum=0.9, nesterov=True)
-        weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
-                                                verbose=0, save_best_only=True, mode='auto')
-        keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
-                                     write_graph=True, write_images=True)
+        sgd = SGD(lr=1e-8, decay=1e-6, momentum=0.9, nesterov=True)
         """
+        weight_save_callback = keras.callback.ModelCheckpoint('/model/weights.hdf5', monitor='val_loss',
+                                                verbose=0, save_best_only=True, mode='auto')
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                            metrics=['accuracy'], callbacks=[weight_save_callback])
         """
-        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
+        self.model.compile(optimizer=sgd, loss=softmax_cross_entropy_with_logits,
                             metrics=['accuracy'])
-
-        self.model.fit(self.train_images, self.train_labels, batch_size=1, epochs=1)
-        # self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class.h5'))
-
-    def predict(self):
+        self.model.fit(self.train_images, self.train_labels, batch_size=10, epochs=10000)
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
-        np.save('cache/test_predict2.npy', test_predict)
+        np.save('cache/test_predict.npy', test_predict)
+        self.model.save_weights(os.path.join('cache', 'keras_softmax_10000_model_weights.h5'))
 
 
 if __name__ == '__main__':
-    pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
-    pylon5_cache = os.path.join(pylon5, 'cache')
     args = parse_args()
-    rm = RetinaModel(classification=args.classification)
+    rm = RetinaModel()
     rm.create_model()
+    print(rm.model.summary())
     rm.set_weights()
     rm.get_data()
     # plot_model(rm.model,"model.png")
-    # rm.run()
-    # rm.predict()
-    # print(rm.model.summary())
+    rm.run()
     K.clear_session()

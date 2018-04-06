@@ -57,7 +57,7 @@ def load_images(data_type="train", image_type="label", classification=None):
             elif classification == 4:
                 background = ((b + g + r) == 0)
                 new_image_data = np.stack([artery, overlap, vein,background], 0)
-            elif classification == 2:
+            elif classification == 1:
                 optic_nerve = artery | overlap | vein
                 new_image_data = np.stack([optic_nerve], 0)
                 # new_image_data = new_image_data.reshape(565,565)
@@ -67,8 +67,9 @@ def load_images(data_type="train", image_type="label", classification=None):
         try:
             images_data.append(new_image_data)
         except Exception as e:
-            print(images_data.shape)
-            print(new_image_data.shape)
+            print(e)
+            # print(images_data.shape)
+            # print(new_image_data.shape)
 
     images_data = np.array(images_data)
     return images_data
