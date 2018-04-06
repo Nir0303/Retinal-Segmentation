@@ -154,8 +154,8 @@ class RetinaModel(object):
         """
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights.h5")
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_2class.h5"):
+            self.model.load_weights("cache/keras_crop_model_weights_2class.h5")
             return
 
 
@@ -199,8 +199,8 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights.h5'))
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
