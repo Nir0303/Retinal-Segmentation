@@ -221,6 +221,7 @@ class RetinaModel(object):
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
+        print(test_predict.shape)
         np.save('cache/test_predict2.npy', test_predict)
 
 
