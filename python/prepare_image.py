@@ -3,6 +3,7 @@ import os
 import re
 from PIL import Image , ImageOps
 
+
 pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
 DATA_PATH = os.path.join(pylon5, "data")
 
@@ -13,9 +14,9 @@ def get_image_path(data_type="train", image_type="label"):
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":
-        image_path = os.path.join(DATA_PATH, "train", "images")
+        image_path = os.path.join(DATA_PATH, "train", "images_1")
     elif data_type == "test" and image_type == "image":
-        image_path = os.path.join(DATA_PATH, "test", "images")
+        image_path = os.path.join(DATA_PATH, "test", "images_1")
     elif data_type == "test" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "test", "av")
 
@@ -32,10 +33,12 @@ def load_images(data_type="train", image_type="label", classification=None):
         image = Image.open(image_path)
         # image.show()
         image_data = np.array(image, np.float32)
-        if image_data.shape == (584, 565, 3):
+        if image_data.shape ==(584, 565, 3):
             image_data = image_data[9:574,:,:]
         else:
             image_data = image_data[:,9:574, :]
+        # Image.fromarray(np.uint8(image_data)).show()
+        # Image.fromarray(np.uint8(image_data)).save('test.png') ; exit()
         if image_type == "image":
             image_data -= np.array((171.0773, 98.4333, 58.8811))
 
@@ -47,21 +50,21 @@ def load_images(data_type="train", image_type="label", classification=None):
             r = image_data[..., 0]
             g = image_data[..., 1]
             b = image_data[..., 2]
-            unknown = (np.minimum (b, r)) > 0
+            unknown = (np.minimum(b, r)) > 0
             artery = (r - unknown) > 0
             vein = (b - unknown) > 0
-            overlap = (g - unknown) > 0
+            overlap =(g - unknown) > 0
             if classification == 3:
-                # background = ((b+g+r) == 0)
+                # background =((b+g+r) == 0)
                 new_image_data = np.stack([artery, overlap, vein], 0)
             elif classification == 4:
-                background = ((b + g + r) == 0)
+                background =((b + g + r) == 0)
                 new_image_data = np.stack([artery, overlap, vein,background], 0)
             elif classification == 1:
                 optic_nerve = artery | overlap | vein
                 new_image_data = np.stack([optic_nerve], 0)
                 # new_image_data = new_image_data.reshape(565,565)
-                # Image.fromarray(np.uint8(np.where (new_image_data, 255, 0)), mode='L').show()
+                # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)), mode='L').show()
 
             # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0))).show()
         try:
@@ -87,7 +90,7 @@ def load_drive_data(classification=3):
 if __name__ == '__main__':
     # load_drive_data()
     # test_labels = load_images(data_type="test", image_type="label", classification=2)
-    train_images, train_labels, test_images, test_labels = load_drive_data(classification=2)
+    train_images, train_labels, test_images, test_labels = load_drive_data(classification=4)
     print(train_images.shape)
     print(train_labels.shape)
     print(test_images.shape)

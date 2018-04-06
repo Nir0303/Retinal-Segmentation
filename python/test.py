@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image
 from scipy.special import expit
-
+from PIL import ImageDraw
 
 def softmax(x):
     """Compute softmax values for each sets of scores in x."""
@@ -47,7 +47,9 @@ def reconstruct_image_4():
 
 test_label = np.load("cache/test_predict2.npy")
 for i in range(len(test_label)):
-    image = test_label[i]
-    image = np.uint8(np.where(image>= 0.1, 255, 0))
-    Image.fromarray(image.reshape(565, 565), mode='L').show()
-    exit()
+    image_data = test_label[i]
+    image_data = np.uint8(np.where(image_data>= 0.1, 255, 0)).reshape(565, 565)
+    image = Image.fromarray(image_data, mode='L')
+    image.save('data/predict/1_class/label_{}.png'.format(i+1))
+
+
