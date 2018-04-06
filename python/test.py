@@ -46,4 +46,8 @@ def reconstruct_image_4():
 # image.show()
 
 test_label = np.load("cache/test_predict2.npy")
-print(test_label.shape)
+for i in range(len(test_label)):
+    image = test_label[i]
+    image = np.uint8(np.where(image>= 0.1, 255, 0))
+    Image.fromarray(image.reshape(565, 565), mode='L').show()
+    exit()
