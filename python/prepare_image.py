@@ -35,7 +35,7 @@ def load_images(data_type="train", image_type="label", classification=None):
         image_data = np.array(image, np.float32)
         if image_data.shape ==(584, 565, 3):
             image_data = image_data[9:574,:,:]
-        else:
+        elif image_data.shape ==(565, 584, 3) :
             image_data = image_data[:,9:574, :]
         # Image.fromarray(np.uint8(image_data)).show()
         # Image.fromarray(np.uint8(image_data)).save('test.png') ; exit()
@@ -90,7 +90,7 @@ def load_drive_data(classification=3):
 if __name__ == '__main__':
     # load_drive_data()
     # test_labels = load_images(data_type="test", image_type="label", classification=2)
-    train_images, train_labels, test_images, test_labels = load_drive_data(classification=4)
+    train_images, train_labels, test_images, test_labels = load_drive_data(classification=1)
     print(train_images.shape)
     print(train_labels.shape)
     print(test_images.shape)
