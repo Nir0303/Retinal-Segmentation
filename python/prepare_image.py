@@ -8,9 +8,11 @@ pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
 DATA_PATH = os.path.join(pylon5, "data")
 
 
-def get_image_path(data_type="train", image_type="label"):
-    # regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
-    regex = re.compile(r"(.*\.tif)")
+def get_image_path(data_type="train", image_type="label", dataset="big"):
+    if dataset == "small":
+        regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
+    else:
+        regex = re.compile(r"(.*\.tif)")
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":
@@ -27,15 +29,15 @@ def get_image_path(data_type="train", image_type="label"):
             yield os.path.join(dir_path, file_name)
 
 
-def load_images(data_type="train", image_type="label", classification=None):
+def load_images(data_type="train", image_type="label", classification=None, dataset="big"):
     images_data = []
-    for index, image_path in enumerate(get_image_path(data_type,image_type)):
+    for index, image_path in enumerate(get_image_path(data_type, image_type, dataset)):
         image = Image.open(image_path)
         # image.show()
         image_data = np.array(image, np.float32)
-        if image_data.shape ==(584, 565, 3):
+        if image_data.shape == (584, 565, 3):
             image_data = image_data[9:574,:,:]
-        elif image_data.shape ==(565, 584, 3) :
+        elif image_data.shape == (565, 584, 3) :
             image_data = image_data[:,9:574, :]
         # Image.fromarray(np.uint8(image_data)).show()
         # Image.fromarray(np.uint8(image_data)).save('test.png') ; exit()
