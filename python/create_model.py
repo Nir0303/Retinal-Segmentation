@@ -35,27 +35,6 @@ def softmax_cross_entropy_with_logits(target, output):
                                                       logits=output)
     return tf.reduce_mean(loss,axis=-1)
 
-def weighted_binary_crossentropy(target, output):
-    """
-    Weighted binary crossentropy between an output tensor
-    and a target tensor. POS_WEIGHT is used as a multiplier
-    for the positive targets.
-
-    Combination of the following functions:
-    * keras.losses.binary_crossentropy
-    * keras.backend.tensorflow_backend.binary_crossentropy
-    * tf.nn.weighted_cross_entropy_with_logits
-    """
-    # transform back to logits
-    _epsilon = tfb._to_tensor(tfb.epsilon(), output.dtype.base_dtype)
-    output = tf.clip_by_value(output, _epsilon, 1 - _epsilon)
-    output = tf.log(output /(1 - output))
-    # compute weighted loss
-    loss = tf.nn.weighted_cross_entropy_with_logits(targets=target,
-                                                    logits=output,
-                                                    pos_weight=POS_WEIGHT)
-    return tf.reduce_mean(loss, axis=-1)
-
 
 def parse_args():
     """
@@ -66,6 +45,9 @@ def parse_args():
     parser.add_argument("--cache", "-c", help="Cache data wherever possible", action='store_true')
     parser.add_argument("--classification", "-t", help="Cache data wherever possible",
                         default=4, type=int)
+    parser.add_argument("--dataset", "-d", help="dataset small or big",
+                         default="big", choices=["small", "big"], type=str)
+    parser.add_argument("--reload", "-r", help="reload data", action='store_true')
     parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analysis",
                          default="INFO")
     args = parser.parse_args()
@@ -73,14 +55,16 @@ def parse_args():
 
 
 class RetinaModel(object):
-    def __init__(self, classification=3):
+    def __init__(self, classification=3, dataset="big", reload="False"):
         self.model = None
         self.input = None
         self.output = None
         self._classification = classification
+        self.dataset = dataset
+        self.reload = reload
 
     def create_model(self):
-        input_shape =(3, 565, 565)
+        input_shape = (3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
@@ -131,7 +115,7 @@ class RetinaModel(object):
 
         upside_multi2 = Cropping2D(cropping=((0, 1),(0, 1)), name="upside_multi2")(side_multi2_up)
 
-        # Decovolution Layer2
+        #Decovolution Layer2
         side_multi3_up = UpSampling2D(size=(4, 4), name="side_multi3_up")(conv3_3_16)
         upside_multi3 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi3")(side_multi3_up)
 
@@ -145,12 +129,7 @@ class RetinaModel(object):
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
-        """
-        if args.cache:
-            with open("cache/model.json", 'w') as json_file:
-                json_model = self.model.to_json()
-                json_file.write(json_model)
-        """
+
 
     def set_weights(self):
         if args.cache and os.path.exists("cache/keras_crop_model_weights_1class.h5"):
@@ -164,11 +143,8 @@ class RetinaModel(object):
                 if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3 :
                     layer.set_weights(layer3.get_weights())
 
-    @staticmethod
-    def _write_hdf5(name, data):
-        cache_image = os.path.join('cache', 'image')
-        utility.create_directory(cache_image)
-        output_file = os.path.join(cache_image,name+'.h5')
+    def _write_hdf5(self, name, data):
+        output_file = os.path.join(self.cache_image, name+'.h5')
         with h5py.File(output_file, "w") as f:
             f.create_dataset('image', data=data, dtype=data.dtype)
 
@@ -178,30 +154,35 @@ class RetinaModel(object):
             return f["image"][()]
 
     def get_data(self):
-        cache_image = os.path.join(pylon5_cache,'image')
-        if args.cache and os.path.exists(cache_image):
-            self.train_images = self._load_hdf5(os.path.join(cache_image, 'train_images.h5'))
-            self.train_labels = self._load_hdf5(os.path.join(cache_image, 'train_labels.h5'))
-            self.test_images = self._load_hdf5(os.path.join(cache_image, 'test_images.h5'))
-            self.test_labels = self._load_hdf5(os.path.join(cache_image, 'test_labels.h5'))
+        self.cache_image = os.path.join(pylon5_cache, self.dataset, 'image')
+        if self.reload:
+            utility.remove_directory(self.cache_image)
+        if args.cache and os.path.exists(self.cache_image):
+            self.train_images = self._load_hdf5(os.path.join(self.cache_image, 'train_images.h5'))
+            self.train_labels = self._load_hdf5(os.path.join(self.cache_image, 'train_labels.h5'))
+            self.test_images = self._load_hdf5(os.path.join(self.cache_image, 'test_images.h5'))
+            self.test_labels = self._load_hdf5(os.path.join(self.cache_image, 'test_labels.h5'))
             return
 
         self.train_images = prepare_image.load_images(data_type="train", image_type="image",
-                                                      classification=self._classification)
+                                                      classification=self._classification,
+                                                      dataset = self.dataset)
         self.train_labels = prepare_image.load_images(data_type="train", image_type="label",
-                                                      classification=self._classification)
+                                                      classification=self._classification,
+                                                      dataset=self.dataset)
         self.test_images = prepare_image.load_images(data_type="test", image_type="image",
-                                                     classification=self._classification)
+                                                     classification=self._classification,
+                                                     dataset=self.dataset)
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
-                                                     classification=self._classification)
+                                                     classification=self._classification,
+                                                     dataset=self.dataset)
 
-        if args.cache and not os.path.exists(cache_image):
-            utility.create_directory(cache_image)
+        if args.cache and not os.path.exists(self.cache_image):
+            utility.create_directory(self.cache_image)
             self._write_hdf5('train_images', self.train_images)
             self._write_hdf5('train_labels', self.train_labels)
             self._write_hdf5('test_images', self.test_images)
             self._write_hdf5('test_labels', self.test_labels)
-
 
     def run(self):
         print(self.train_images.shape)
@@ -229,12 +210,15 @@ if __name__ == '__main__':
     pylon5 = os.environ["SCRATCH"] if os.environ.get("SCRATCH", None) else "."
     pylon5_cache = os.path.join(pylon5, 'cache')
     args = parse_args()
-    rm = RetinaModel(classification=args.classification)
+    rm = RetinaModel(classification=args.classification, dataset=args.dataset,
+                     reload=args.reload)
     rm.create_model()
     rm.set_weights()
     rm.get_data()
+    print(rm.test_labels.shape)
+    print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
-    rm.run()
-    rm.predict()
+    # rm.run()
+    # rm.predict()
     # print(rm.model.summary())
     K.clear_session()

@@ -4,8 +4,10 @@ utility module to run os commands
 """
 from __future__ import print_function
 
+import threading
 import os
 import shutil
+
 
 def create_directory(path):
     """
@@ -14,7 +16,8 @@ def create_directory(path):
     :return:
     """
     if not os.path.exists(path):
-        os.mkdir(path)
+        os.popen("mkdir -p {}".format(path))
+        os.wait()
 
 
 def remove_directory(path):
