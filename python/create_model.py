@@ -27,13 +27,13 @@ cur_dir = os.getcwd()
 def sigmoid_cross_entropy_with_logits(target, output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
-    return tf.reduce_mean(loss,axis=-1)
+    return tf.reduce_mean(loss, axis=-1)
 
 
 def softmax_cross_entropy_with_logits(target, output):
     loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=target,
                                                       logits=output)
-    return tf.reduce_mean(loss,axis=-1)
+    return tf.reduce_mean(loss, axis=-1)
 
 
 def parse_args():
@@ -132,8 +132,8 @@ class RetinaModel(object):
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_1class_cc.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights_1class_cc.h5")
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_1class.h5"):
+            self.model.load_weights("cache/keras_crop_model_weights_1class.h5")
             return
             with open("cache/3_class_model.json") as f:
                 model_3class = model_from_json(json.dumps(json.load(f)))
@@ -194,10 +194,10 @@ class RetinaModel(object):
                                      write_graph=True, write_images=True)
         tb_callback.set_model(self.model)
         weight_save_callback.set_model(self.model)
-        self.model.compile(optimizer=sgd, loss='categorical_crossentropy',
+        self.model.compile(optimizer=sgd, loss='softmax_cross_entropy_with_logits',
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class_cc.h5'))
 
     def predict(self):
