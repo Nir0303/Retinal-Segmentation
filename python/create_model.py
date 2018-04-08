@@ -187,18 +187,18 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-2, decay=1e-4, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
                                      write_graph=True, write_images=True)
         tb_callback.set_model(self.model)
         weight_save_callback.set_model(self.model)
-        self.model.compile(optimizer=sgd, loss='softmax_cross_entropy_with_logits',
+        self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class_cc.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
