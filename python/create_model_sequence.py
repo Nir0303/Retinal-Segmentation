@@ -211,8 +211,8 @@ class RetinaModel(object):
                             metrics=['accuracy'])
 
         # self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
-        sequence = DriveSequence(self.train_images, self.train_labels, batch_size=10)
-        self.model.fit_generator(sequence, epochs=2, steps_per_epoch=1)
+        sequence = DriveSequence(self.train_images, self.train_labels, batch_size=5)
+        self.model.fit_generator(sequence, epochs=2, steps_per_epoch=(int(len(self.train_images)/5)), workers=2)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class.h5'))
 
     def predict(self):
@@ -235,6 +235,6 @@ if __name__ == '__main__':
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
     rm.run()
-    # rm.predict()
+    rm.predict()
     # print(rm.model.summary())
     K.clear_session()
