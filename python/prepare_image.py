@@ -65,8 +65,12 @@ def load_images(data_type="train", image_type="label", classification=None, data
             elif classification == 1:
                 optic_nerve = artery | overlap | vein
                 new_image_data = np.stack([optic_nerve], 0)
-                # new_image_data = new_image_data.reshape(565,565)
-                # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)), mode='L').show()
+            elif classification == 2:
+                optic_nerve = artery | overlap | vein
+                background = ((b + g + r) == 0)
+                new_image_data = np.stack([optic_nerve,background], 0)
+                # new_image_data = new_image_data[1,...].reshape(565,565)
+                # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)), mode='L').show();exit();
 
             # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0))).show()
         try:
@@ -91,7 +95,7 @@ def load_drive_data(classification=3):
 
 if __name__ == '__main__':
     # load_drive_data()
-    # test_labels = load_images(data_type="test", image_type="label", classification=2)
+    test_labels = load_images(data_type="test", image_type="label", classification=2)
     train_images, train_labels, test_images, test_labels = load_drive_data(classification=1)
     print(train_images.shape)
     print(train_labels.shape)

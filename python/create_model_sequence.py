@@ -140,21 +140,20 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_1class.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights_1class.h5")
-            return
+        if args.cache and os.path.exists("cache/keras_crop_model_weights.h5"):
+            self.model.load_weights("cache/keras_crop_model_weights.h5")
             with open("cache/3_class_model.json") as f:
                 model_3class = model_from_json(json.dumps(json.load(f)))
             model_3class.load_weights("cache/keras_crop_model_weights.h5")
 
             for layer, layer3 in zip(self.model.layers, model_3class.layers):
-                if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3 :
+                if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3:
                     layer.set_weights(layer3.get_weights())
 
     def _write_hdf5(self, name, data):
@@ -213,7 +212,7 @@ class RetinaModel(object):
         # self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
         sequence = DriveSequence(self.train_images, self.train_labels, batch_size=5)
         self.model.fit_generator(sequence, epochs=2, steps_per_epoch=(int(len(self.train_images)/5)), workers=2)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
