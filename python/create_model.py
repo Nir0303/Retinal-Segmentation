@@ -126,14 +126,14 @@ class RetinaModel(object):
         # Specialized Layer
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
-        upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), activation='sigmoid', name="upscore_fuse")(concat_upscore)
+        upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_1class.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights_1class.h5")
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_2class_2.h5"):
+            self.model.load_weights("cache/keras_crop_model_weights_2class_2.h5")
             return
             with open("cache/3_class_model.json") as f:
                 model_3class = model_from_json(json.dumps(json.load(f)))
@@ -187,7 +187,7 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-5, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
@@ -197,14 +197,14 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=['accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=300)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_1class.h5'))
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class_2.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2.npy', test_predict)
+        np.save('cache/test_predict2_class_2.npy', test_predict)
 
 
 if __name__ == '__main__':
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
-    rm.run()
+    # rm.run()
     rm.predict()
     # print(rm.model.summary())
     K.clear_session()
