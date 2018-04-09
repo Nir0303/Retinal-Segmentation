@@ -147,7 +147,7 @@ class RetinaModel(object):
 
     def set_weights(self):
         if args.cache and os.path.exists("cache/keras_crop_model_weights.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights.h5")
+            # self.model.load_weights("cache/keras_crop_model_weights.h5")
             with open("cache/3_class_model.json") as f:
                 model_3class = model_from_json(json.dumps(json.load(f)))
             model_3class.load_weights("cache/keras_crop_model_weights.h5")
