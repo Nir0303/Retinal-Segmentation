@@ -133,15 +133,14 @@ class RetinaModel(object):
 
     def set_weights(self):
         if args.cache and os.path.exists("cache/keras_crop_model_weights_2class_2.h5"):
-            self.model.load_weights("cache/keras_crop_model_weights_2class_2.h5")
-            return
-            with open("cache/3_class_model.json") as f:
-                model_3class = model_from_json(json.dumps(json.load(f)))
-            model_3class.load_weights("cache/keras_crop_model_weights.h5")
+            # self.model.load_weights("cache/keras_crop_model_weights_2class_2.h5")
+            with open("cache/2_class_model.json") as f:
+                model_2class = model_from_json(json.dumps(json.load(f)))
+            model_2class.load_weights("cache/keras_crop_model_weights_2class_2.h5")
 
-            for layer, layer3 in zip(self.model.layers, model_3class.layers):
-                if(layer.name != 'upscore_fuse' and self._classification !=3) or self._classification == 3 :
-                    layer.set_weights(layer3.get_weights())
+            for layer, layer2 in zip(self.model.layers, model_2class.layers):
+                if(layer.name != 'upscore_fuse' and self._classification !=2) or self._classification == 2:
+                    layer.set_weights(layer2.get_weights())
 
     def _write_hdf5(self, name, data):
         output_file = os.path.join(self.cache_image, name+'.h5')
@@ -187,7 +186,7 @@ class RetinaModel(object):
 
     def run(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-5, decay=1e-4, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
@@ -198,13 +197,13 @@ class RetinaModel(object):
                             metrics=['accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_2class_2.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2_class_2.npy', test_predict)
+        np.save('cache/test_predict2_class_4.npy', test_predict)
 
 
 if __name__ == '__main__':
@@ -219,7 +218,7 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
-    # rm.run()
+    rm.run()
     rm.predict()
     # print(rm.model.summary())
     K.clear_session()
