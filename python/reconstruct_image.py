@@ -30,7 +30,7 @@ def reconstruct_image(classification='4_class', data=None):
                 elif classification == '4_class':
                     j0 = j[0]
                     j1 = j[1]
-                    j2 = 0
+                    j2 = j[2]
                     j3 = j[3]
                     # print(j0, j1, j2, j3)
                     if j0 >= j1 and j0 >= j2 and j0 >= j3:
