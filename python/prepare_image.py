@@ -61,7 +61,7 @@ def load_images(data_type="train", image_type="label", classification=None, data
                 new_image_data = np.stack([artery, overlap, vein], 0)
             elif classification == 4:
                 background =((b + g + r) == 0)
-                new_image_data = np.stack([artery, overlap, vein,background], 0)
+                new_image_data = np.stack([artery, overlap, vein, background], 0)
             elif classification == 1:
                 optic_nerve = artery | overlap | vein
                 new_image_data = np.stack([optic_nerve], 0)
