@@ -24,6 +24,13 @@ K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
 
 
+def image_accuracy(y_true, y_pred):
+    y_pred = tf.nn.softmax(tf.sigmoid(y_pred, 'predict_sigmoid'), axis=0).transpose(1, 2, 0)
+    y_true = y_true.transpose(1, 2, 0)
+    accuracy_mask = tf.cast(K.equal(y_pred, y_true), 'int32')
+    accuracy = tf.sum(accuracy_mask) / 319225
+    return accuracy
+
 def sigmoid_cross_entropy_with_logits(target, output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
@@ -196,7 +203,7 @@ class RetinaModel(object):
         tb_callback.set_model(self.model)
         weight_save_callback.set_model(self.model)
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                            metrics=['accuracy'])
+                            metrics=[image_accuracy, 'accuracy'])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class.h5'))
@@ -205,7 +212,7 @@ class RetinaModel(object):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2_class_4_1.npy', test_predict)
+        np.save('cache/test_predict2_class_4.npy', test_predict)
 
 
 if __name__ == '__main__':
