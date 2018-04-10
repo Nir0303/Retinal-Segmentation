@@ -24,11 +24,19 @@ K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
 
 
+def image_accuracy_1(y_true, y_pred):
+    print(y_true.get_shape())
+    y_pred = tf.nn.softmax(K.sigmoid(y_pred), axis=0)
+    y_true = y_true
+    accuracy_mask = tf.cast(tf.equal(y_pred, y_true), 'int32')
+    accuracy = tf.reduce_sum(accuracy_mask)
+    return y_true.shape
+
 def image_accuracy(y_true, y_pred):
-    y_pred = tf.nn.softmax(tf.sigmoid(y_pred, 'predict_sigmoid'), axis=0).transpose(1, 2, 0)
-    y_true = y_true.transpose(1, 2, 0)
-    accuracy_mask = tf.cast(K.equal(y_pred, y_true), 'int32')
-    accuracy = tf.sum(accuracy_mask) / 319225
+    X_sigmoid = tf.nn.sigmoid(y_true)
+    X_softmax = tf.nn.softmax(X_sigmoid, axis=1)
+    verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1), tf.argmax(y_pred, axis=1)),dtype=tf.float32)
+    accuracy = tf.reduce_mean(verify)
     return accuracy
 
 def sigmoid_cross_entropy_with_logits(target, output):
