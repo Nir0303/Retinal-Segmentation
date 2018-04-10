@@ -249,7 +249,7 @@ if __name__ == '__main__':
     rm.get_data()
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
-    plot_model(rm.model,"model.png")
+    # plot_model(rm.model,"model.png")
     rm.run()
     rm.predict()
     # print(rm.model.summary())
