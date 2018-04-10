@@ -132,8 +132,10 @@ class RetinaModel(object):
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_2class_2.h5"):
-            # self.model.load_weights("cache/keras_crop_model_weights_2class_2.h5")
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class.h5"):
+            print("yes")
+            self.model.load_weights("cache/keras_crop_model_weights_4class.h5")
+            return
             with open("cache/2_class_model.json") as f:
                 model_2class = model_from_json(json.dumps(json.load(f)))
             model_2class.load_weights("cache/keras_crop_model_weights_2class_2.h5")
@@ -203,7 +205,7 @@ class RetinaModel(object):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2_class_4.npy', test_predict)
+        np.save('cache/test_predict2_class_4_1.npy', test_predict)
 
 
 if __name__ == '__main__':
