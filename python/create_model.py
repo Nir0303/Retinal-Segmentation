@@ -148,9 +148,9 @@ class RetinaModel(object):
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class.h5"):
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg.h5"):
             print("yes")
-            self.model.load_weights("cache/keras_crop_model_weights_4class.h5")
+            self.model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
             return
             with open("cache/2_class_model.json") as f:
                 model_2class = model_from_json(json.dumps(json.load(f)))
@@ -205,7 +205,7 @@ class RetinaModel(object):
     def run(self):
         print(self.train_images.shape)
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
-        weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
+        weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph1', histogram_freq=1,
                                      write_graph=True, write_images=False)
@@ -214,9 +214,9 @@ class RetinaModel(object):
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=[image_accuracy, 'accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200,
-                       callbacks=[tb_callback, weight_save_callback], validation_split=0.05, verbose=1)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class.h5'))
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
+                       callbacks=[tb_callback], validation_split=0.05, verbose=1)
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
