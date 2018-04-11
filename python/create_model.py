@@ -26,7 +26,7 @@ cur_dir = os.getcwd()
 
 def image_accuracy(y_true, y_pred):
     X_sigmoid = tf.nn.sigmoid(y_true)
-    X_softmax = tf.nn.softmax(X_sigmoid, axis=1)
+    X_softmax = tf.nn.softmax(X_sigmoid, axis=0)
     verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1), tf.argmax(y_pred, axis=1)),dtype=tf.float32)
     accuracy = tf.reduce_mean(verify)
     return accuracy
