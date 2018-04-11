@@ -221,7 +221,7 @@ class RetinaModel(object):
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph', histogram_freq=0,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph1', histogram_freq=1,
                                      write_graph=True, write_images=True)
         tb_callback.set_model(self.model)
         weight_save_callback.set_model(self.model)
