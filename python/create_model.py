@@ -24,15 +24,6 @@ K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
 
 
-def image_accuracy_1(y_true, y_pred):
-    print(y_true.get_shape())
-    y_pred = tf.nn.softmax(K.sigmoid(y_pred), axis=0)
-    y_true = y_true
-    accuracy_mask = tf.cast(tf.equal(y_pred, y_true), 'int32')
-    accuracy = tf.reduce_sum(accuracy_mask)
-    return y_true.shape
-
-
 def image_accuracy(y_true, y_pred):
     X_sigmoid = tf.nn.sigmoid(y_true)
     X_softmax = tf.nn.softmax(X_sigmoid, axis=1)
@@ -40,15 +31,10 @@ def image_accuracy(y_true, y_pred):
     accuracy = tf.reduce_mean(verify)
     return accuracy
 
+
 def sigmoid_cross_entropy_with_logits(target, output):
     loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output)
-    return tf.reduce_mean(loss, axis=-1)
-
-
-def softmax_cross_entropy_with_logits(target, output):
-    loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=target,
-                                                      logits=output)
     return tf.reduce_mean(loss, axis=-1)
 
 
@@ -85,7 +71,7 @@ class RetinaModel(object):
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
                           padding="SAME")(data_input)
-        conv1_1 = Dropout(0.2)(conv1_1)
+        conv1_1 = Dropout(0.3)(conv1_1)
         conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_2",
                           padding="SAME")(conv1_1)
         conv1_2 = Dropout(0.2)(conv1_2)
@@ -95,7 +81,7 @@ class RetinaModel(object):
         # Convolution Layer 2
         conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_1",
                           padding="SAME")(max_pool1)
-        conv2_1 = Dropout(0.2)(conv2_1)
+        conv2_1 = Dropout(0.3)(conv2_1)
         conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_2",
                           padding="SAME")(conv2_1)
         conv2_2 = Dropout(0.2)(conv2_2)
@@ -111,17 +97,17 @@ class RetinaModel(object):
         conv3_2 = Dropout(0.2)(conv3_2)
         conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_3",
                           padding="SAME")(conv3_2)
-        conv3_3 = Dropout(0.2)(conv3_3)
+        conv3_3 = Dropout(0.3)(conv3_3)
         max_pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool3',
                                   padding="SAME")(conv3_3)
 
         # Convolution Layer4
         conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_1",
                           padding="SAME")(max_pool3)
-        conv4_1 = Dropout(0.2)(conv4_1)
+        conv4_1 = Dropout(0.3)(conv4_1)
         conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_2",
                           padding="SAME")(conv4_1)
-        conv4_2 = Dropout(0.2)(conv4_2)
+        conv4_2 = Dropout(0.3)(conv4_2)
         conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_3",
                           padding="SAME")(conv4_2)
         conv4_3 = Dropout(0.2)(conv4_3)
@@ -135,7 +121,7 @@ class RetinaModel(object):
         conv2_2_16 = Dropout(0.2)(conv2_2_16)
         conv3_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv3_3_16",
                              padding="SAME")(conv3_3)
-        conv3_3_16 = Dropout(0.2)(conv3_3_16)
+        conv3_3_16 = Dropout(0.3)(conv3_3_16)
         conv4_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv4_3_16",
                              padding="SAME")(conv4_3)
         conv4_3_16 = Dropout(0.2)(conv4_3_16)
@@ -157,7 +143,7 @@ class RetinaModel(object):
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
-        upscore_fuse = Dropout(0.1)(upscore_fuse)
+        upscore_fuse = Dropout(0.3)(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
@@ -222,13 +208,14 @@ class RetinaModel(object):
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.hdf5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph1', histogram_freq=1,
-                                     write_graph=True, write_images=True)
-        tb_callback.set_model(self.model)
-        weight_save_callback.set_model(self.model)
+                                     write_graph=True, write_images=False)
+        # tb_callback.set_model(self.model)
+        # weight_save_callback.set_model(self.model)
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=[image_accuracy, 'accuracy'])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200)
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1200,
+                       callbacks=[tb_callback, weight_save_callback], validation_split=0.05, verbose=1)
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class.h5'))
 
     def predict(self):
