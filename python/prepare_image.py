@@ -56,18 +56,17 @@ def load_images(data_type="train", image_type="label", classification=None, data
             artery = (r - unknown) > 0
             vein = (b - unknown) > 0
             overlap =(g - unknown) > 0
+            background = ((b + g + r) == 0)
             if classification == 3:
                 # background =((b+g+r) == 0)
-                new_image_data = np.stack([artery, overlap, vein], 0)
+                new_image_data = np.stack([artery, vein, background], 0)
             elif classification == 4:
-                background =((b + g + r) == 0)
                 new_image_data = np.stack([artery, overlap, vein, background], 0)
             elif classification == 1:
                 optic_nerve = artery | overlap | vein
                 new_image_data = np.stack([optic_nerve], 0)
             elif classification == 2:
                 optic_nerve = artery | overlap | vein
-                background = ((b + g + r) == 0)
                 new_image_data = np.stack([optic_nerve,background], 0)
                 # new_image_data = new_image_data[1,...].reshape(565,565)
                 # Image.fromarray(np.uint8(np.where(new_image_data, 255, 0)), mode='L').show();exit();
