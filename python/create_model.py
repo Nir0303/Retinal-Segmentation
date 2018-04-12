@@ -78,7 +78,7 @@ class RetinaModel(object):
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
                           padding="SAME")(data_input)
-        conv1_1 = Dropout(0.3, name="Drop1_1")(conv1_1)
+        conv1_1 = Dropout(0.2, name="Drop1_1")(conv1_1)
         conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_2",
                           padding="SAME")(conv1_1)
         conv1_2 = Dropout(0.2, name="Drop1_2")(conv1_2)
@@ -88,7 +88,7 @@ class RetinaModel(object):
         # Convolution Layer 2
         conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_1",
                           padding="SAME")(max_pool1)
-        conv2_1 = Dropout(0.3, name="Drop2_1")(conv2_1)
+        conv2_1 = Dropout(0.2, name="Drop2_1")(conv2_1)
         conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_2",
                           padding="SAME")(conv2_1)
         conv2_2 = Dropout(0.2, name="Drop2_2")(conv2_2)
@@ -104,17 +104,17 @@ class RetinaModel(object):
         conv3_2 = Dropout(0.2, name="Drop3_2")(conv3_2)
         conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_3",
                           padding="SAME")(conv3_2)
-        conv3_3 = Dropout(0.3, name="Drop3_3")(conv3_3)
+        conv3_3 = Dropout(0.2, name="Drop3_3")(conv3_3)
         max_pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool3',
                                   padding="SAME")(conv3_3)
 
         # Convolution Layer4
         conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_1",
                           padding="SAME")(max_pool3)
-        conv4_1 = Dropout(0.3, name="Drop4_1")(conv4_1)
+        conv4_1 = Dropout(0.2, name="Drop4_1")(conv4_1)
         conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_2",
                           padding="SAME")(conv4_1)
-        conv4_2 = Dropout(0.3, name="Drop4_2")(conv4_2)
+        conv4_2 = Dropout(0.2, name="Drop4_2")(conv4_2)
         conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_3",
                           padding="SAME")(conv4_2)
         conv4_3 = Dropout(0.2, name="Drop4_3")(conv4_3)
@@ -128,7 +128,7 @@ class RetinaModel(object):
         conv2_2_16 = Dropout(0.2, name="Drop2_2_16")(conv2_2_16)
         conv3_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv3_3_16",
                              padding="SAME")(conv3_3)
-        conv3_3_16 = Dropout(0.3, name="Drop3_3_16")(conv3_3_16)
+        conv3_3_16 = Dropout(0.2, name="Drop3_3_16")(conv3_3_16)
         conv4_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv4_3_16",
                              padding="SAME")(conv4_3)
         conv4_3_16 = Dropout(0.2, name="Drop4_3_16")(conv4_3_16)
@@ -150,7 +150,7 @@ class RetinaModel(object):
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
-        upscore_fuse = Dropout(0.3, name="Dropout_Classifier")(upscore_fuse)
+        upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
