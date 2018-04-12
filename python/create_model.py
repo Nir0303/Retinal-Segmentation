@@ -19,24 +19,29 @@ import keras.backend.tensorflow_backend as tfb
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import SGD,Adam
+from time import time
 
 K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
 
 
 def image_accuracy(y_true, y_pred):
-    X_sigmoid = tf.nn.sigmoid(y_true)
-    X_softmax = tf.nn.softmax(X_sigmoid, axis=0)
-    verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1), tf.argmax(y_pred, axis=1)),dtype=tf.float32)
-    accuracy = tf.reduce_mean(verify)
-    return accuracy
+    with tf.name_scope("ImageAccuracy"):
+        X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
+        X_softmax = tf.nn.softmax(X_sigmoid, axis=0, name="Softmax")
+        verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1),
+                                  tf.argmax(y_pred, axis=1), name="Compare"),
+                         dtype=tf.float32, name="Cast")
+        accuracy = tf.reduce_mean(verify, name="Accuracy")
+        return accuracy
 
 
 def sigmoid_cross_entropy_with_logits(target, output):
     with tf.name_scope("SigmoidCrossEntropyLoss"):
+        print(target.get_shape())
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output, name="SigmoidCrossEntropy")
-        return tf.reduce_mean(loss, axis=0, name="LossMean")
+        return tf.reduce_mean(loss, axis=1, name="LossMean")
 
 
 def parse_args():
@@ -72,60 +77,60 @@ class RetinaModel(object):
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
                           padding="SAME")(data_input)
-        conv1_1 = Dropout(0.3)(conv1_1)
+        conv1_1 = Dropout(0.3, name="Drop1_1")(conv1_1)
         conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_2",
                           padding="SAME")(conv1_1)
-        conv1_2 = Dropout(0.2)(conv1_2)
+        conv1_2 = Dropout(0.2, name="Drop1_2")(conv1_2)
         max_pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool1',
                                   padding="SAME")(conv1_2)
 
         # Convolution Layer 2
         conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_1",
                           padding="SAME")(max_pool1)
-        conv2_1 = Dropout(0.3)(conv2_1)
+        conv2_1 = Dropout(0.3, name="Drop2_1")(conv2_1)
         conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_2",
                           padding="SAME")(conv2_1)
-        conv2_2 = Dropout(0.2)(conv2_2)
+        conv2_2 = Dropout(0.2, name="Drop2_2")(conv2_2)
         max_pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool2',
                                   padding="SAME")(conv2_2)
 
         # Convolution Layer3
         conv3_1 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_1",
                           padding="SAME")(max_pool2)
-        conv3_1 = Dropout(0.2)(conv3_1)
+        conv3_1 = Dropout(0.2, name="Drop3_1")(conv3_1)
         conv3_2 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_2",
                           padding="SAME")(conv3_1)
-        conv3_2 = Dropout(0.2)(conv3_2)
+        conv3_2 = Dropout(0.2, name="Drop3_2")(conv3_2)
         conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_3",
                           padding="SAME")(conv3_2)
-        conv3_3 = Dropout(0.3)(conv3_3)
+        conv3_3 = Dropout(0.3, name="Drop3_3")(conv3_3)
         max_pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool3',
                                   padding="SAME")(conv3_3)
 
         # Convolution Layer4
         conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_1",
                           padding="SAME")(max_pool3)
-        conv4_1 = Dropout(0.3)(conv4_1)
+        conv4_1 = Dropout(0.3, name="Drop4_1")(conv4_1)
         conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_2",
                           padding="SAME")(conv4_1)
-        conv4_2 = Dropout(0.3)(conv4_2)
+        conv4_2 = Dropout(0.3, name="Drop4_2")(conv4_2)
         conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_3",
                           padding="SAME")(conv4_2)
-        conv4_3 = Dropout(0.2)(conv4_3)
+        conv4_3 = Dropout(0.2, name="Drop4_3")(conv4_3)
 
         #
         conv1_2_16 = Conv2D(16, kernel_size=(3, 3), name="conv1_2_16",
                              padding="SAME")(conv1_2)
-        conv1_2_16 = Dropout(0.2)(conv1_2_16)
+        conv1_2_16 = Dropout(0.2, name="Drop1_2_16")(conv1_2_16)
         conv2_2_16 = Conv2D(16, kernel_size=(3, 3), name="conv2_2_16",
                              padding="SAME")(conv2_2)
-        conv2_2_16 = Dropout(0.2)(conv2_2_16)
+        conv2_2_16 = Dropout(0.2, name="Drop2_2_16")(conv2_2_16)
         conv3_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv3_3_16",
                              padding="SAME")(conv3_3)
-        conv3_3_16 = Dropout(0.3)(conv3_3_16)
+        conv3_3_16 = Dropout(0.3, name="Drop3_3_16")(conv3_3_16)
         conv4_3_16 = Conv2D(16, kernel_size=(3, 3), name="conv4_3_16",
                              padding="SAME")(conv4_3)
-        conv4_3_16 = Dropout(0.2)(conv4_3_16)
+        conv4_3_16 = Dropout(0.2, name="Drop4_3_16")(conv4_3_16)
 
         # Deconvolution Layer1
         side_multi2_up = UpSampling2D(size=(2, 2), name="side_multi2_up")(conv2_2_16)
@@ -144,7 +149,7 @@ class RetinaModel(object):
         concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
-        upscore_fuse = Dropout(0.3)(upscore_fuse)
+        upscore_fuse = Dropout(0.3, name="Dropout_Classifier")(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
@@ -208,7 +213,7 @@ class RetinaModel(object):
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph1', histogram_freq=1,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=1,
                                      write_graph=True, write_images=False)
         # tb_callback.set_model(self.model)
         # weight_save_callback.set_model(self.model)
