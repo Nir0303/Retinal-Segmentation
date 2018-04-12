@@ -32,5 +32,5 @@ def reconstruct_image_vec(classification='4_class', data=None):
         image.save('data/predict/{}/label_{}.png'.format(classification, image_index))
 
 
-reconstruct_image_vec(classification='2_class', data="cache/test_predict2_class.npy")
+# reconstruct_image_vec(classification='2_class', data="cache/test_predict2_class.npy")
 reconstruct_image_vec(classification='4_class', data="cache/test_predict2_class_4.npy")
