@@ -28,10 +28,11 @@ def crop_circle():
 
 def document_images():
     image_path = 'data/test/av/10_test.png'
-    # image_path = "data/predict/4_class/label_0_p.png"
+    #image_path = "data/predict/4_class/label_0_p.png"
     image_data = np.array(Image.open(image_path))
     a = image_data.copy()
     v = image_data.copy()
+
     o = image_data[..., 1]
     print(np.max(o[..., 1]))
     a[..., 1], a[..., 2] = a[..., 0], a[..., 0]
@@ -39,10 +40,17 @@ def document_images():
     
     v[..., 0], v[..., 1] = v[..., 2], v[..., 2]
     v[..., 2] = 255
-
+    
+    background = image_data[..., 0] + image_data[..., 1] + image_data[..., 2] < 255
+    background = np.int8(np.where(background, 255, 0))
+    class_2 = np.int8(np.where(background, 0, 255))
+    
+    
     Image.fromarray(np.uint8(image_data), mode='RGB').save('data/document_images/ground_truth/label.png')
     Image.fromarray(np.uint8(a), mode='RGB').save('data/document_images/ground_truth/arteries.png')
     Image.fromarray(np.uint8(o), mode='L').save('data/document_images/ground_truth/overlap.png')
+    Image.fromarray(np.uint8(background), mode='L').save('data/document_images/ground_truth/background.png')
+    Image.fromarray(np.uint8(class_2), mode='L').save('data/document_images/ground_truth/class_2.png')
     Image.fromarray(np.uint8(v), mode='RGB').save('data/document_images/ground_truth/veins.png')
 
 

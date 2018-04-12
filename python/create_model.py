@@ -27,8 +27,9 @@ cur_dir = os.getcwd()
 
 def image_accuracy(y_true, y_pred):
     with tf.name_scope("ImageAccuracy"):
+        # print(y_pred.shape)
         X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
-        X_softmax = tf.nn.softmax(X_sigmoid, axis=0, name="Softmax")
+        X_softmax = tf.nn.softmax(X_sigmoid, axis=1, name="Softmax")
         verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1),
                                   tf.argmax(y_pred, axis=1), name="Compare"),
                          dtype=tf.float32, name="Cast")
@@ -38,7 +39,7 @@ def image_accuracy(y_true, y_pred):
 
 def sigmoid_cross_entropy_with_logits(target, output):
     with tf.name_scope("SigmoidCrossEntropyLoss"):
-        print(target.get_shape())
+        # print(target.get_shape())
         loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
                                                    logits=output, name="SigmoidCrossEntropy")
         return tf.reduce_mean(loss, axis=1, name="LossMean")
@@ -213,15 +214,18 @@ class RetinaModel(object):
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=1,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=10,
                                      write_graph=True, write_images=False)
         # tb_callback.set_model(self.model)
         # weight_save_callback.set_model(self.model)
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=[image_accuracy, 'accuracy'])
 
+        # self.model.fit(self.train_images[:1, ...], self.train_labels[:1, ...], batch_size=1, epochs=1,
+        #               callbacks=[tb_callback], verbose=1)
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
-                       callbacks=[tb_callback], validation_split=0.05, verbose=1)
+                        callbacks=[tb_callback], validation_split=0.05, verbose=1)
+
         # self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg.h5'))
 
     def predict(self):
