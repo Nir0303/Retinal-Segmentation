@@ -33,9 +33,10 @@ def image_accuracy(y_true, y_pred):
 
 
 def sigmoid_cross_entropy_with_logits(target, output):
-    loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
-                                                   logits=output)
-    return tf.reduce_mean(loss, axis=-1)
+    with tf.name_scope("SigmoidCrossEntropyLoss"):
+        loss = tf.nn.sigmoid_cross_entropy_with_logits(labels=target,
+                                                   logits=output, name="SigmoidCrossEntropy")
+        return tf.reduce_mean(loss, axis=0, name="LossMean")
 
 
 def parse_args():
@@ -216,7 +217,7 @@ class RetinaModel(object):
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
                        callbacks=[tb_callback], validation_split=0.05, verbose=1)
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg.h5'))
+        # self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
@@ -238,6 +239,6 @@ if __name__ == '__main__':
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
     rm.run()
-    rm.predict()
+    # rm.predict()
     # print(rm.model.summary())
     K.clear_session()
