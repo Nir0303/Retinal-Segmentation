@@ -158,9 +158,9 @@ class RetinaModel(object):
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg.h5"):
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg_tanh.h5"):
             print("yes")
-            self.model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
+            self.model.load_weights("cache/keras_crop_model_weights_4class_reg_tanh.h5")
             return
             with open("cache/2_class_model.json") as f:
                 model_2class = model_from_json(json.dumps(json.load(f)))
@@ -250,7 +250,7 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
-    rm.run()
-    # rm.predict()
+    # rm.run()
+    rm.predict()
     # print(rm.model.summary())
     K.clear_session()
