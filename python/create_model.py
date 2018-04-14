@@ -13,8 +13,9 @@ import keras
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Dropout
 from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
-from keras.layers import MaxPooling2D, UpSampling2D
+from keras.layers import MaxPooling2D, UpSampling2D,
 from keras import backend as K
+from keras.activations import softmax
 import keras.backend.tensorflow_backend as tfb
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
@@ -152,7 +153,7 @@ class RetinaModel(object):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-        upscore_fuse = Activation(activation='softmax', axis=0, name="softmax")(upscore_fuse)
+        upscore_fuse = softmax(axis=0, name="softmax")(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
