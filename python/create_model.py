@@ -78,46 +78,46 @@ class RetinaModel(object):
         input_shape =(3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
-        conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_1",
+        conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='tanh', name="conv1_1",
                           padding="SAME")(data_input)
         conv1_1 = Dropout(0.2, name="Drop1_1")(conv1_1)
-        conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='relu', name="conv1_2",
+        conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='tanh', name="conv1_2",
                           padding="SAME")(conv1_1)
         conv1_2 = Dropout(0.2, name="Drop1_2")(conv1_2)
         max_pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool1',
                                   padding="SAME")(conv1_2)
 
         # Convolution Layer 2
-        conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_1",
+        conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='tanh', name="conv2_1",
                           padding="SAME")(max_pool1)
         conv2_1 = Dropout(0.2, name="Drop2_1")(conv2_1)
-        conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='relu', name="conv2_2",
+        conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='tanh', name="conv2_2",
                           padding="SAME")(conv2_1)
         conv2_2 = Dropout(0.2, name="Drop2_2")(conv2_2)
         max_pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool2',
                                   padding="SAME")(conv2_2)
 
         # Convolution Layer3
-        conv3_1 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_1",
+        conv3_1 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_1",
                           padding="SAME")(max_pool2)
         conv3_1 = Dropout(0.2, name="Drop3_1")(conv3_1)
-        conv3_2 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_2",
+        conv3_2 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_2",
                           padding="SAME")(conv3_1)
         conv3_2 = Dropout(0.2, name="Drop3_2")(conv3_2)
-        conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='relu', name="conv3_3",
+        conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_3",
                           padding="SAME")(conv3_2)
         conv3_3 = Dropout(0.2, name="Drop3_3")(conv3_3)
         max_pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool3',
                                   padding="SAME")(conv3_3)
 
         # Convolution Layer4
-        conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_1",
+        conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_1",
                           padding="SAME")(max_pool3)
         conv4_1 = Dropout(0.2, name="Drop4_1")(conv4_1)
-        conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_2",
+        conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_2",
                           padding="SAME")(conv4_1)
         conv4_2 = Dropout(0.2, name="Drop4_2")(conv4_2)
-        conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='relu', name="conv4_3",
+        conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_3",
                           padding="SAME")(conv4_2)
         conv4_3 = Dropout(0.2, name="Drop4_3")(conv4_3)
 
@@ -153,9 +153,7 @@ class RetinaModel(object):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-        upscore_fuse = Permute((2,3,1))(upscore_fuse)
-        upscore_fuse = Activation('softmax')(upscore_fuse)
-        upscore_fuse = Permute((3,1,2))(upscore_fuse)
+
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
@@ -231,7 +229,7 @@ class RetinaModel(object):
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
                         callbacks=[tb_callback], validation_split=0.05, verbose=1)
 
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_soft.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_tanh.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
