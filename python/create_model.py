@@ -31,7 +31,7 @@ def image_accuracy(y_true, y_pred):
         # print(y_pred.shape)
         # X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
         # X_softmax = tf.nn.softmax(X_sigmoid, axis=1, name="Softmax")
-        y_true = y_true[:,:-1,:,:]
+        y_pred = y_pred[:, :-1, :, :]
         verify = tf.cast(tf.equal(tf.argmax(y_true, axis=1),
                                   tf.argmax(y_pred, axis=1), name="Compare"),
                          dtype=tf.float32, name="Cast")
@@ -217,16 +217,16 @@ class RetinaModel(object):
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=10,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=20,
                                      write_graph=True, write_images=False)
         # tb_callback.set_model(self.model)
         # weight_save_callback.set_model(self.model)
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                            metrics=[ 'accuracy',image_accuracy])
+                            metrics=['accuracy',image_accuracy])
 
         # self.model.fit(self.train_images[:1, ...], self.train_labels[:1, ...], batch_size=1, epochs=1,
         #               callbacks=[tb_callback], verbose=1)
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
                         callbacks=[tb_callback], validation_split=0.05, verbose=1)
 
         self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_tanh.h5'))
@@ -250,7 +250,7 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
     # plot_model(rm.model,"model.png")
-    # rm.run()
-    rm.predict()
+    rm.run()
+    # rm.predict()
     # print(rm.model.summary())
     K.clear_session()
