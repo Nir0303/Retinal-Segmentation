@@ -13,7 +13,7 @@ import keras
 from keras.models import Sequential, Model, model_from_json
 from keras.layers import Dense, Flatten, Dropout, Input, concatenate, merge, Add, Dropout
 from keras.layers import Conv2D, Conv2DTranspose, Cropping2D, ZeroPadding2D, Activation
-from keras.layers import MaxPooling2D, UpSampling2D,
+from keras.layers import MaxPooling2D, UpSampling2D, Permute
 from keras import backend as K
 from keras.activations import softmax
 import keras.backend.tensorflow_backend as tfb
@@ -31,7 +31,7 @@ def image_accuracy(y_true, y_pred):
         # print(y_pred.shape)
         # X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
         # X_softmax = tf.nn.softmax(X_sigmoid, axis=1, name="Softmax")
-        y_true = y_true[...,:-1]
+        y_true = y_true[:,:-1,:,:]
         verify = tf.cast(tf.equal(tf.argmax(y_true, axis=1),
                                   tf.argmax(y_pred, axis=1), name="Compare"),
                          dtype=tf.float32, name="Cast")
@@ -153,7 +153,9 @@ class RetinaModel(object):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-        upscore_fuse = softmax(axis=0, name="softmax")(upscore_fuse)
+        upscore_fuse = Permute((2,3,1))(upscore_fuse)
+        upscore_fuse = Activation('softmax')(upscore_fuse)
+        upscore_fuse = Permute((3,1,2))(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
 
@@ -222,14 +224,14 @@ class RetinaModel(object):
         # tb_callback.set_model(self.model)
         # weight_save_callback.set_model(self.model)
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                            metrics=[image_accuracy, 'accuracy'])
+                            metrics=[ 'accuracy',image_accuracy])
 
         # self.model.fit(self.train_images[:1, ...], self.train_labels[:1, ...], batch_size=1, epochs=1,
         #               callbacks=[tb_callback], verbose=1)
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=1000,
                         callbacks=[tb_callback], validation_split=0.05, verbose=1)
 
-        # self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_soft.h5'))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
