@@ -59,6 +59,8 @@ def parse_args():
     parser.add_argument("--dataset", "-d", help="dataset small or big",
                          default="big", choices=["small", "big"], type=str)
     parser.add_argument("--reload", "-r", help="reload data", action='store_true')
+    parser.add_argument("--activation", "-a", help="activation function for conv layers",
+                         default="relu")
     parser.add_argument("--log_level", "-l", help="Set loglevel for debugging and analysis",
                          default="INFO")
     args = parser.parse_args()
@@ -66,58 +68,60 @@ def parse_args():
 
 
 class RetinaModel(object):
-    def __init__(self, classification=3, dataset="big", reload="False"):
+    def __init__(self, classification=3, dataset="big", reload="False", activation='relu'):
         self.model = None
         self.input = None
         self.output = None
         self._classification = classification
         self.dataset = dataset
         self.reload = reload
+        self.activation = activation
 
     def create_model(self):
+        print(self.activation)
         input_shape =(3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
-        conv1_1 = Conv2D(64, kernel_size=(3, 3), activation='tanh', name="conv1_1",
+        conv1_1 = Conv2D(64, kernel_size=(3, 3), activation=self.activation, name="conv1_1",
                           padding="SAME")(data_input)
         conv1_1 = Dropout(0.2, name="Drop1_1")(conv1_1)
-        conv1_2 = Conv2D(64, kernel_size=(3, 3), activation='tanh', name="conv1_2",
+        conv1_2 = Conv2D(64, kernel_size=(3, 3), activation=self.activation, name="conv1_2",
                           padding="SAME")(conv1_1)
         conv1_2 = Dropout(0.2, name="Drop1_2")(conv1_2)
         max_pool1 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool1',
                                   padding="SAME")(conv1_2)
 
         # Convolution Layer 2
-        conv2_1 = Conv2D(128, kernel_size=(3, 3), activation='tanh', name="conv2_1",
+        conv2_1 = Conv2D(128, kernel_size=(3, 3), activation=self.activation, name="conv2_1",
                           padding="SAME")(max_pool1)
         conv2_1 = Dropout(0.2, name="Drop2_1")(conv2_1)
-        conv2_2 = Conv2D(128, kernel_size=(3, 3), activation='tanh', name="conv2_2",
+        conv2_2 = Conv2D(128, kernel_size=(3, 3), activation=self.activation, name="conv2_2",
                           padding="SAME")(conv2_1)
         conv2_2 = Dropout(0.2, name="Drop2_2")(conv2_2)
         max_pool2 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool2',
                                   padding="SAME")(conv2_2)
 
         # Convolution Layer3
-        conv3_1 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_1",
+        conv3_1 = Conv2D(256, kernel_size=(3, 3), activation=self.activation, name="conv3_1",
                           padding="SAME")(max_pool2)
         conv3_1 = Dropout(0.2, name="Drop3_1")(conv3_1)
-        conv3_2 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_2",
+        conv3_2 = Conv2D(256, kernel_size=(3, 3), activation=self.activation, name="conv3_2",
                           padding="SAME")(conv3_1)
         conv3_2 = Dropout(0.2, name="Drop3_2")(conv3_2)
-        conv3_3 = Conv2D(256, kernel_size=(3, 3), activation='tanh', name="conv3_3",
+        conv3_3 = Conv2D(256, kernel_size=(3, 3), activation=self.activation, name="conv3_3",
                           padding="SAME")(conv3_2)
         conv3_3 = Dropout(0.2, name="Drop3_3")(conv3_3)
         max_pool3 = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool3',
                                   padding="SAME")(conv3_3)
 
         # Convolution Layer4
-        conv4_1 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_1",
+        conv4_1 = Conv2D(512, kernel_size=(3, 3), activation=self.activation, name="conv4_1",
                           padding="SAME")(max_pool3)
         conv4_1 = Dropout(0.2, name="Drop4_1")(conv4_1)
-        conv4_2 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_2",
+        conv4_2 = Conv2D(512, kernel_size=(3, 3), activation=self.activation, name="conv4_2",
                           padding="SAME")(conv4_1)
         conv4_2 = Dropout(0.2, name="Drop4_2")(conv4_2)
-        conv4_3 = Conv2D(512, kernel_size=(3, 3), activation='tanh', name="conv4_3",
+        conv4_3 = Conv2D(512, kernel_size=(3, 3), activation=self.activation, name="conv4_3",
                           padding="SAME")(conv4_2)
         conv4_3 = Dropout(0.2, name="Drop4_3")(conv4_3)
 
@@ -158,9 +162,9 @@ class RetinaModel(object):
 
 
     def set_weights(self):
-        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg_tanh.h5"):
+        if args.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg.h5"):
             print("yes")
-            self.model.load_weights("cache/keras_crop_model_weights_4class_reg_tanh.h5")
+            self.model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
             return
             with open("cache/2_class_model.json") as f:
                 model_2class = model_from_json(json.dumps(json.load(f)))
@@ -204,7 +208,7 @@ class RetinaModel(object):
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
                                                      classification=self._classification,
                                                      dataset=self.dataset)
-
+        return
         if args.cache and not os.path.exists(self.cache_image):
             utility.create_directory(self.cache_image)
             self._write_hdf5('train_images', self.train_images)
@@ -229,13 +233,13 @@ class RetinaModel(object):
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
                         callbacks=[tb_callback], validation_split=0.05, verbose=1)
 
-        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_tanh.h5'))
+        self.model.save_weights(os.path.join('cache', 'keras_crop_model_weights_4class_reg_{}.h5'.format(self.activation)))
 
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2_class_4.npy', test_predict)
+        np.save('cache/test_predict2_class_4_{}.npy'.format(self.activation), test_predict)
 
 
 if __name__ == '__main__':
@@ -243,7 +247,7 @@ if __name__ == '__main__':
     pylon5_cache = os.path.join(pylon5, 'cache')
     args = parse_args()
     rm = RetinaModel(classification=args.classification, dataset=args.dataset,
-                     reload=args.reload)
+                     reload=args.reload , activation=args.activation)
     rm.create_model()
     rm.set_weights()
     rm.get_data()
