@@ -28,11 +28,9 @@ cur_dir = os.getcwd()
 
 def image_accuracy(y_true, y_pred):
     with tf.name_scope("ImageAccuracy"):
-        # print(y_pred.shape)
-        # X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
-        # X_softmax = tf.nn.softmax(X_sigmoid, axis=1, name="Softmax")
-        y_pred = y_pred[:, :-1, :, :]
-        verify = tf.cast(tf.equal(tf.argmax(y_true, axis=1),
+        X_sigmoid = tf.nn.sigmoid(y_true, name="Sigmoid")
+        X_softmax = tf.nn.softmax(X_sigmoid, axis=1, name="Softmax")
+        verify = tf.cast(tf.equal(tf.argmax(X_softmax, axis=1),
                                   tf.argmax(y_pred, axis=1), name="Compare"),
                          dtype=tf.float32, name="Cast")
         accuracy = tf.reduce_mean(verify, name="Accuracy")
@@ -46,6 +44,13 @@ def sigmoid_cross_entropy_with_logits(target, output):
                                                    logits=output, name="SigmoidCrossEntropy")
         return tf.reduce_mean(loss, axis=1, name="LossMean")
 
+def softmax_cross_entropy_with_logits(target, output):
+    with tf.name_scope ("SigmoidCrossEntropyLoss"):
+        loss = tf.nn.softmax_cross_entropy_with_logits_v2(labels=target,
+                                                          logits=output,
+                                                          dim=1
+                                                          )
+        return tf.reduce_mean(loss, axis=-1)
 
 def parse_args():
     """
