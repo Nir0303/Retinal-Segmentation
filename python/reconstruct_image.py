@@ -28,9 +28,16 @@ def reconstruct_image_vec(classification='4_class', data=None):
             optic_nerve = image_data_max == image_data[..., 0]
             image_r = np.where(optic_nerve, 255, 0).reshape(565, 565)
             image = Image.fromarray(np.uint8(image_r), mode='L')
+        elif classification == '3_class':
+            a = image_data_max == image_data[..., 0]
+            v = image_data_max == image_data[..., 1]
+            z = np.zeros(shape=a.shape)
+            image_r = np.where(np.stack((a, z, v), axis=2), 255, 0)
+            image = Image.fromarray(np.uint8(image_r), mode='RGB')
     # image.show()
         image.save('data/predict/{}/label_{}.png'.format(classification, image_index))
 
 
 # reconstruct_image_vec(classification='2_class', data="cache/test_predict2_class.npy")
-reconstruct_image_vec(classification='4_class', data="cache/test_predict2_class_4.npy")
+reconstruct_image_vec(classification='4_class', data="cache/test_predict2_class_4_reg.npy")
+# reconstruct_image_vec(classification='3_class', data="cache/test_predict2_class_3.npy")
