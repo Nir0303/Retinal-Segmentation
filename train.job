@@ -4,8 +4,8 @@
 #SBATCH -p GPU-shared
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=addankn@sunyit.edu
-#SBATCH --gres=gpu:k80:4
-#SBATCH -t 24:30:00
+#SBATCH --gres=gpu:p100:2
+#SBATCH -t 31:30:00
 
 #echo commands to stdout
 set -x
@@ -20,8 +20,10 @@ source $KERAS_ENV/bin/activate
 #move to working directory
 cd $HOME
 
-cd Retinal-Segmentation
+cd r2/Retinal-Segmentation
 
-python python/create_model_upsample.py --cache
+# python python/create_model_upsample.py --cache
+python python/create_model.py --classification 4 --dataset big --cache --activation relu
+
 
 echo "ALL DONE!"
