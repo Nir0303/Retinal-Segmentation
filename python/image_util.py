@@ -27,8 +27,8 @@ def crop_circle():
 
 
 def document_images():
-    image_path = 'data/test/av/10_test.png'
-    #image_path = "data/predict/4_class/label_0_p.png"
+    # image_path = 'data/test/av/10_test.png'
+    image_path = "data/predict/4_class/label_0_p.png"
     image_data = np.array(Image.open(image_path))
     a = image_data.copy()
     v = image_data.copy()
@@ -46,12 +46,12 @@ def document_images():
     class_2 = np.int8(np.where(background, 0, 255))
     
     
-    Image.fromarray(np.uint8(image_data), mode='RGB').save('data/document_images/ground_truth/label.png')
-    Image.fromarray(np.uint8(a), mode='RGB').save('data/document_images/ground_truth/arteries.png')
-    Image.fromarray(np.uint8(o), mode='L').save('data/document_images/ground_truth/overlap.png')
-    Image.fromarray(np.uint8(background), mode='L').save('data/document_images/ground_truth/background.png')
-    Image.fromarray(np.uint8(class_2), mode='L').save('data/document_images/ground_truth/class_2.png')
-    Image.fromarray(np.uint8(v), mode='RGB').save('data/document_images/ground_truth/veins.png')
+    Image.fromarray(np.uint8(image_data), mode='RGB').save('data/document_images/predict/label.png')
+    Image.fromarray(np.uint8(a), mode='RGB').save('data/document_images/predict/arteries.png')
+    Image.fromarray(np.uint8(o), mode='L').save('data/document_images/predict/overlap.png')
+    Image.fromarray(np.uint8(background), mode='L').save('data/document_images/predict/background.png')
+    Image.fromarray(np.uint8(class_2), mode='L').save('data/document_images/predict/class_2.png')
+    Image.fromarray(np.uint8(v), mode='RGB').save('data/document_images/predict/veins.png')
 
 
 document_images()

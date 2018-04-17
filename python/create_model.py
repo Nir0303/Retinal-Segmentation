@@ -80,7 +80,7 @@ class RetinaModel(object):
         self._classification = classification
         self.dataset = dataset
         self.reload = reload
-        self.activation = activation
+        self.activation = activation if activation != 'leaky_relu' else tf.nn.leaky_relu
 
     def create_model(self):
         print(self.activation)
@@ -260,7 +260,7 @@ if __name__ == '__main__':
     # print(rm.model.layers[1].get_weights())
     # print(rm.model.layers[1].output_shape)
     # plot_model(rm.model,"model.png")
-    rm.run()
-    rm.predict()
+    # rm.run()
+    # rm.predict()
     # print(rm.model.summary())
     K.clear_session()
