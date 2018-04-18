@@ -104,7 +104,7 @@ class BaseModel(object):
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
                                                      classification=self._classification,
                                                      dataset=self.dataset)
-
+        return
         if self.cache and not os.path.exists(self.cache_image):
             utility.create_directory(self.cache_image)
             self._write_hdf5('train_images', self.train_images)
