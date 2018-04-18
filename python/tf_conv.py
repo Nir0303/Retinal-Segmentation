@@ -12,10 +12,10 @@ def softmax(x):
     return e_x / e_x.sum(axis=0)
 
 
-def tf_accuracy():
+def tf_accuracy(predict_data):
     test_label = prepare_image.load_images(data_type="test", image_type="label", classification=4,
                                             dataset="small")
-    predict_label = np.load('cache/test_predict2_class_4_soft_relu.npy')
+    predict_label = np.load(predict_data)
     X = tf.constant(predict_label, dtype=tf.float32, shape=test_label.shape)
     Y = tf.constant(test_label, dtype=tf.float32, shape=test_label.shape)
     X_sigmoid = tf.nn.sigmoid(X)
@@ -37,33 +37,17 @@ def tf_accuracy():
     v_p = tf.reduce_sum(tf.cast(tf.equal(tf.argmax(X_softmax, axis=1), 2), dtype=tf.float32))
     v_t = tf.reduce_sum(tf.cast(tf.equal(tf.argmax(Y, axis=1), 2), dtype=tf.float32))
     
-    print(sess.run(1 - abs(b_t-b_p)/b_t))
-    print(sess.run(1 - abs(a_t - a_p) / a_t))
-    print(sess.run(1 - abs(v_t - v_p) / v_t))
-    print(sess.run(1 - abs(o_t - o_p) / o_t))
-    print(sess.run(accuracy))
-    
+    print("Accuracy of Background is {}".format(sess.run(1 - abs(b_t-b_p)/b_t)))
+    print("Accuracy of Arteries is {}".format(sess.run(1 - abs(a_t - a_p) / a_t)))
+    print("Accuracy of Veins is {}".format(sess.run(1 - abs(v_t - v_p) / v_t)))
+    print("Accuracy of Background is {}".format(sess.run(1 - abs(o_t - o_p) / o_t)))
+    print("Overall accuracy is {}".format(sess.run(accuracy)))
 
 
-def tf_f1score():
+def np_f1score(predict_data):
     test_label = prepare_image.load_images(data_type="test", image_type="label", classification=4,
                                             dataset="small")
-    predict_label = np.load('cache/test_predict2_class_4_soft_relu.npy')
-    X = tf.constant(predict_label, dtype=tf.float32, shape=test_label.shape)
-    Y = tf.constant(test_label, dtype=tf.float32, shape=test_label.shape)
-    X_sigmoid = tf.nn.sigmoid(X)
-    X_softmax = tf.nn.softmax(X_sigmoid, axis=1)
-    sess = tf.InteractiveSession()
-    f1_s = accuracy_score(tf.argmax(X_softmax, axis=1).eval(), tf.argmax(Y, axis=1).eval())
-
-    print(f1_s)
-    print(sess.run(X_softmax))
-
-
-def np_f1score():
-    test_label = prepare_image.load_images(data_type="test", image_type="label", classification=4,
-                                            dataset="small")
-    predict_label = np.load('cache/test_predict2_class_4_soft_relu.npy')
+    predict_label = np.load(predict_data)
     predict_label = softmax(expit(predict_label.transpose(1, 2, 3, 0))).transpose(3, 0, 1, 2)
     predict = np.argmax(predict_label, axis=1).reshape(11 * 565 * 565)
     test = np.argmax(test_label, axis=1).reshape(11 * 565 * 565)
@@ -73,16 +57,15 @@ def np_f1score():
     precision_s_w = precision_score(predict, test, average='weighted')
     recall_s = recall_score(predict, test, average=None)
     recall_s_w = recall_score(predict, test, average='weighted')
-    print(f1_s)
-    print(f1_s_w)
-    print(precision_s)
-    print(precision_s_w)
-    print(recall_s)
-    print(recall_s_w)
+    print("Precision of A,O,V,B is {}".format(precision_s))
+    print("Overall Precision is {}".format(precision_s_w))
+    print("Recall of A,O,V,B is {}".format(recall_s))
+    print("Overall Recall is {}".format(recall_s_w))
+    print("F1-Score of A,O,V,B {}".format(f1_s))
+    print("Overall F-1 Score is {}".format(f1_s_w))
 
 
-
-def image_reconstruct():
+def tf_image_reconstruct():
     predict_label = np.load('cache/test_predict2_class_4.npy')
     # X = tf.placeholder(dtype=tf.float32, shape=predict_label.shape)
     X = tf.constant(predict_label, dtype=tf.float32, shape=predict_label.shape)
@@ -101,10 +84,11 @@ def image_reconstruct():
     sess.run(image_r)
 
 
-# image_reconstruct()
-tf_accuracy()
-# np_f1score()
-# tf_f1score()
+# tf_image_reconstruct()
+tf_accuracy(predict_data='cache/test_predict2_class_4_relu.npy')
+np_f1score(predict_data='cache/test_predict2_class_4_relu.npy')
+
+
 
 '''
 https://stackoverflow.com/questions/43784921/how-to-display-custom-images-in-tensorboard-using-keras?noredirect=1&lq=1
