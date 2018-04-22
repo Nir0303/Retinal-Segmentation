@@ -10,6 +10,8 @@
 #echo commands to stdout
 set -x
 
+export CUDA_VISIBLE_DEVICES=0,1
+
 module load tensorflow/1.5_gpu
 module load keras/2.0.4
 
