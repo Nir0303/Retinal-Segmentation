@@ -45,7 +45,7 @@ def parse_args():
 
 
 class RetinaDevModel(BaseModel):
-    def __init__(self, classification=3, dataset="big", reload=False, activation='relu', cache=True):
+    def __init__(self, classification=4, dataset="big", reload=False, activation='relu', cache=True):
         super(RetinaDevModel, self).__init__(classification, dataset, reload, activation, cache)
 
     def create_model(self):
@@ -169,23 +169,23 @@ class RetinaDevModel(BaseModel):
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
     def set_weights(self):
-        if self.cache and os.path.exists("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5"):
+        if self.cache and os.path.exists("cache/keras_crop_model_weights_4class_dev_reg_relu.h5"):
             print("yes")
-            self.model.set_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
-            """
-            with open("cache/dev_model.json") as f:
+            # self.model.set_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
+            # return
+            with open("cache/dev2_model.json") as f:
                 dev_model = model_from_json(json.dumps(json.load(f)))
-            dev_model.load_weights("cache/keras_crop_model_weights_4class_dev_reg_relu.h5")
-            for layer, layer4 in zip(self.model.layers, dev_model.layers):
-                for dev_layer ,layer in zip(dev_model.layers, self.model.layers):
-                    try:
-                        layer.set_weights(dev_layer.get_weights())
-                    except:
-                        pass
-            self.model.save_weights(os.path.join('cache',
-                                                   'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
-                                                       self.activation)))
-            """
+            dev_model.load_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
+            
+            for dev_layer ,layer in zip(dev_model.layers, self.model.layers):
+                  try:
+                      layer.set_weights(dev_layer.get_weights())
+                  except:
+                      print(layer.name)
+            # self.model.save_weights(os.path.join('cache',
+            #                                       'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
+            #                                           self.activation)))
+            
     
     def run(self):
         print(self.train_images.shape)
@@ -217,9 +217,9 @@ if __name__ == '__main__':
                       reload=args.reload, activation=args.activation, cache=args.cache)
     rm.create_model()
     rm.set_weights()
-    # rm.get_data()
-    # print(rm.test_labels.shape)
-    # print(rm.train_images.shape)
+    rm.get_data()
+    print(rm.test_labels.shape)
+    print(rm.train_images.shape)
     # rm.run()
-    # rm.predict()
+    rm.predict()
     K.clear_session()
