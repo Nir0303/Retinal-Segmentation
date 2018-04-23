@@ -199,7 +199,7 @@ class RetinaDevModel(BaseModel):
                             metrics=['accuracy', image_accuracy])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
-                        callbacks=[tb_callback], validation_split=0.05, verbose=1)
+                        callbacks=[tb_callback], validation_split=0.05, verbose=0)
 
         self.model.save_weights(os.path.join('cache', 
                                              'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(self.activation)))
