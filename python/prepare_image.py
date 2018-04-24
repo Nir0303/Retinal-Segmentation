@@ -33,17 +33,13 @@ def load_images(data_type="train", image_type="label", classification=None, data
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type, image_type, dataset)):
         image = Image.open(image_path)
-        # image.show()
         image_data = np.array(image, np.float32)
         if image_data.shape == (584, 565, 3):
             image_data = image_data[9:574,:,:]
-        elif image_data.shape == (565, 584, 3) :
+        elif image_data.shape == (565, 584, 3):
             image_data = image_data[:,9:574, :]
-        # Image.fromarray(np.uint8(image_data)).show()
-        # Image.fromarray(np.uint8(image_data)).save('test.png') ; exit()
         if image_type == "image":
             image_data -= np.array((171.0773, 98.4333, 58.8811))
-
         num_channels = len(image.getbands())
         image_data = image_data.reshape(image_data.shape[1], image_data.shape[0], num_channels)
         if image_type == "image":
@@ -52,10 +48,11 @@ def load_images(data_type="train", image_type="label", classification=None, data
             r = image_data[..., 0]
             g = image_data[..., 1]
             b = image_data[..., 2]
-            unknown = (np.minimum(b, r)) > 0
-            artery = (r - unknown) > 0
-            vein = (b - unknown) > 0
-            overlap = (g - unknown) > 0
+            new_image_data = np.stack([r,g,b], 0)
+            unknown = (b+g+r <= 255)
+            artery = (r > 0) & unknown
+            vein = (b > 0) & unknown
+            overlap = (g > 0) & unknown
             background = ((b + g + r) == 0)
             if classification == 3:
                 # background =((b+g+r) == 0)
@@ -94,7 +91,7 @@ def load_drive_data(classification=3):
 if __name__ == '__main__':
     # load_drive_data()
     test_labels = load_images(data_type="test", image_type="label", classification=4)
-    train_images, train_labels, test_images, test_labels = load_drive_data(classification=1)
+    train_images, train_labels, test_images, test_labels = load_drive_data(classification=4)
     print(train_images.shape)
     print(train_labels.shape)
     print(test_images.shape)

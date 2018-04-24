@@ -169,11 +169,12 @@ class RetinaDevModel(BaseModel):
         upside_multi6 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi6")(side_multi6_up)
 
         # Specialized Layer
-        concat_upscore = concatenate([conv1_2_16, upside_multi2, upside_multi3, upside_multi4,
+        concat_upscore = concatenate([conv1_2_16, conv1_1_dev, upside_multi2, upside_multi3, upside_multi4,
                                        upside_multi5, upside_multi6],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
+        upscore_fuse = Activation('sigmoid')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
@@ -218,19 +219,19 @@ class RetinaDevModel(BaseModel):
                                      write_graph=True, write_images=False)
 
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                            metrics=['accuracy', image_accuracy])
+                            metrics=[image_accuracy])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
-                        callbacks=[tb_callback], validation_split=0.05, verbose=0)
+                        callbacks=[tb_callback], validation_split=0.005, verbose=2)
 
         self.model.save_weights(os.path.join('cache', 
-                                             'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(self.activation)))
+                                             'keras_crop_model_weights_4class_dev3_reg_{}.h5'.format(self.activation)))
     
     def predict(self):
         test_predict = self.model.predict(self.test_images, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
-        np.save('cache/test_predict2_class_4_dev2_{}.npy'.format(self.activation), test_predict)
+        np.save('cache/test_predict2_class_4_dev3_{}.npy'.format(self.activation), test_predict)
 
 
 if __name__ == '__main__':
