@@ -16,7 +16,7 @@ from keras import backend as K
 from keras.activations import softmax
 import keras.backend.tensorflow_backend as tfb
 from keras.utils import plot_model
-from keras.preprocessing.sequence import pad_sequences
+from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import SGD,Adam
 from time import time
 from base_model import(BaseModel,sigmoid_cross_entropy_with_logits,
@@ -208,10 +208,12 @@ class RetinaDevModel(BaseModel):
             # self.model.save_weights(os.path.join('cache',
             #                                       'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
             #                                           self.activation)))
-            
-    
+
     def run(self):
         print(self.train_images.shape)
+        config = tf.ConfigProto()
+        config.gpu_options.visible_device_list = "1"
+        set_session(tf.Session(config=config))
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
