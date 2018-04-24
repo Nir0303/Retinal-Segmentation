@@ -96,8 +96,17 @@ class RetinaDevModel(BaseModel):
                           padding="SAME")(conv4_2)
         conv4_3 = Dropout(0.2, name="Drop4_3")(conv4_3)
 
+        conv1_1_dev = Conv2D(64, kernel_size=(5, 5), activation=self.activation, name="conv1_1_dev",
+                          padding="SAME")(data_input)
+        conv1_1_dev = Dropout(0.2, name="Drop1_1_dev")(conv1_1_dev)
+        conv1_2_dev = Conv2D(64, kernel_size=(5, 5), activation=self.activation, name="conv1_2_dev",
+                          padding="SAME")(conv1_1_dev)
+        conv1_2_dev = Dropout(0.2, name="Drop1_2_dev")(conv1_2_dev)
+        max_pool1_dev = MaxPooling2D(pool_size=(2, 2), strides=(2, 2), name='max_pool1_dev',
+                                  padding="SAME")(conv1_2_dev)
+
         conv5_1 = Conv2D(64, kernel_size=(5, 5), activation=self.activation, name="conv5_1",
-                          padding="SAME")(max_pool1)
+                          padding="SAME")(max_pool1_dev)
         conv5_1 = Dropout(0.2, name="Drop5_1")(conv5_1)
         conv5_2 = Conv2D(64, kernel_size=(5, 5), activation=self.activation, name="conv5_2",
                           padding="SAME")(conv5_1)
@@ -165,7 +174,6 @@ class RetinaDevModel(BaseModel):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-        upscore_fuse = Activation('sigmoid')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
@@ -178,11 +186,24 @@ class RetinaDevModel(BaseModel):
                 dev_model = model_from_json(json.dumps(json.load(f)))
             dev_model.load_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
             
-            for dev_layer, layer in zip(dev_model.layers, self.model.layers):
+            """
+            for dev_layer,layer in zip(dev_model.layers, self.model.layers):
                   try:
                       layer.set_weights(dev_layer.get_weights())
                   except:
                       print(layer.name)
+            """
+
+            for layer in self.model.layers:
+                for dev_layer in dev_model.layers:
+                    if layer.name == dev_layer.name:
+                        layer.set_weights(dev_layer.get_weights())
+                        # print(layer.name)
+                        break
+                else:
+                    print(layer.name)
+                        
+
             # self.model.save_weights(os.path.join('cache',
             #                                       'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
             #                                           self.activation)))
@@ -193,14 +214,14 @@ class RetinaDevModel(BaseModel):
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=50,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=20,
                                      write_graph=True, write_images=False)
 
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
-                            metrics=[ image_accuracy])
+                            metrics=['accuracy', image_accuracy])
 
         self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
-                        callbacks=[tb_callback], validation_split=0.005, verbose=2)
+                        callbacks=[tb_callback], validation_split=0.05, verbose=0)
 
         self.model.save_weights(os.path.join('cache', 
                                              'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(self.activation)))
