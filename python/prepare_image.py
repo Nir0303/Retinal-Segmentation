@@ -12,7 +12,7 @@ def get_image_path(data_type="train", image_type="label", dataset="big"):
     if dataset == "small":
         regex = re.compile(r"(.*_[1-8]\.png)|(.*\.tif)")
     else:
-        regex = re.compile(r"(.*\.tif)")
+        regex = re.compile(r"(.*[a-z]\.png)|(.*\.tif)")
     if data_type == "train" and image_type == "label":
         image_path = os.path.join(DATA_PATH, "train", "av")
     elif data_type == "train" and image_type == "image":
@@ -32,6 +32,7 @@ def get_image_path(data_type="train", image_type="label", dataset="big"):
 def load_images(data_type="train", image_type="label", classification=None, dataset="big"):
     images_data = []
     for index, image_path in enumerate(get_image_path(data_type, image_type, dataset)):
+        # print(image_path);continue
         image = Image.open(image_path)
         image_data = np.array(image, np.float32)
         if image_data.shape == (584, 565, 3):
