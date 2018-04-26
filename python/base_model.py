@@ -20,6 +20,7 @@ from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
 from keras.optimizers import SGD,Adam
 from time import time
+from generate_metrics import *
 
 K.set_image_data_format("channels_first")
 cur_dir = os.getcwd()
@@ -68,7 +69,7 @@ class BaseModel(object):
         return Exception("Not Implemented Error")
 
     def set_weights(self):
-        return Exception ("Not Implemented Error")
+        return Exception("Not Implemented Error")
 
     def _write_hdf5(self, name, data):
         output_file = os.path.join(self.cache_image, name+'.h5')
@@ -100,10 +101,10 @@ class BaseModel(object):
                                                       dataset=self.dataset)
         self.test_images = prepare_image.load_images(data_type="test", image_type="image",
                                                      classification=self._classification,
-                                                     dataset=self.dataset)
+                                                     dataset="small")
         self.test_labels = prepare_image.load_images(data_type="test", image_type="label",
                                                      classification=self._classification,
-                                                     dataset=self.dataset)
+                                                     dataset="small")
         return
         if self.cache and not os.path.exists(self.cache_image):
             utility.create_directory(self.cache_image)
@@ -112,12 +113,31 @@ class BaseModel(object):
             self._write_hdf5('test_images', self.test_images)
             self._write_hdf5('test_labels', self.test_labels)
 
+    def evaluate(self, type="test"):
+        if type == "test":
+            x_data = self.test_images
+            test_data = self.test_labels
+        else:
+            x_data = self.train_images
+            test_data = self.train_labels
+        self.predict(data=x_data)
+        tf_accuracy(test_data=test_data, predict_data=self.test_predict)
+        np_f1score(test_data=test_data, predict_data=self.test_predict)
+
     def run(self):
+        self.fit()
+        self.set_weights()
+        print("Evaluate results for train data")
+        self.evaluate(type="test")
+        self.evaluate(type="train")
+
+
+
+    def fit(self):
         return Exception("Not Implemented Error")
 
-
-    def predict(self):
-        return Exception ("Not Implemented Error")
+    def predict(self, data):
+        return Exception("Not Implemented Error")
 
 
 if __name__ == '__main__':

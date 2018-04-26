@@ -186,9 +186,8 @@ class RetinaDevModel(BaseModel):
             # self.model.save_weights(os.path.join('cache',
             #                                       'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
             #                                           self.activation)))
-            
-    
-    def run(self):
+
+    def fit(self):
         print(self.train_images.shape)
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
@@ -205,11 +204,11 @@ class RetinaDevModel(BaseModel):
         self.model.save_weights(os.path.join('cache', 
                                              'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(self.activation)))
     
-    def predict(self):
-        test_predict = self.model.predict(self.test_images, batch_size=10)
-        print(test_predict[0])
-        print(test_predict.shape)
-        np.save('cache/test_predict2_class_4_dev2_{}.npy'.format(self.activation), test_predict)
+    def predict(self, data):
+        self.test_predict = self.model.predict(data, batch_size=10)
+        print(self.test_predict[0])
+        print(self.test_predict.shape)
+        np.save('cache/test_predict2_class_4_dev2_{}.npy'.format(self.activation), self.test_predict)
 
 
 if __name__ == '__main__':
