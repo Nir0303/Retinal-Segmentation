@@ -17,6 +17,7 @@ from keras.activations import softmax
 import keras.backend.tensorflow_backend as tfb
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
+from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import SGD,Adam
 from time import time
 from base_model import(BaseModel,sigmoid_cross_entropy_with_logits,
@@ -213,6 +214,9 @@ class RetinaDevModel(BaseModel):
 
 if __name__ == '__main__':
     args = parse_args()
+    config = tf.ConfigProto ()
+    config.gpu_options.visible_device_list = "0"
+    set_session (tf.Session (config=config))
     rm = RetinaDevModel(classification=args.classification, dataset=args.dataset,
                       reload=args.reload, activation=args.activation, cache=args.cache)
     rm.create_model()
