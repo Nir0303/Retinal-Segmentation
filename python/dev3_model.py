@@ -145,6 +145,9 @@ class RetinaDevModel(BaseModel):
                              padding="SAME")(conv6_2)
         conv6_2_16 = Dropout(0.2, name="Drop6_2_16")(conv6_2_16)
 
+        conv1_2_16_dev = Conv2D (16, kernel_size=(3, 3), name="conv1_2_16_dev",
+                             padding="SAME")(conv1_2_dev)
+
         # Deconvolution Layer1
         side_multi2_up = UpSampling2D(size=(2, 2), name="side_multi2_up")(conv2_2_16)
 
@@ -169,7 +172,7 @@ class RetinaDevModel(BaseModel):
         upside_multi6 = Cropping2D(cropping=((1, 2),(1, 2)), name="upside_multi6")(side_multi6_up)
 
         # Specialized Layer
-        concat_upscore = concatenate([conv1_2_16, conv1_1_dev, upside_multi2, upside_multi3, upside_multi4,
+        concat_upscore = concatenate([conv1_2_16, conv1_2_16_dev, upside_multi2, upside_multi3, upside_multi4,
                                        upside_multi5, upside_multi6],
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
