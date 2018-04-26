@@ -177,15 +177,16 @@ class RetinaDevModel(BaseModel):
         upscore_fuse = Activation('sigmoid')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
+        # print(self.model.to_json());exit()
 
     def set_weights(self):
         if self.cache and os.path.exists("cache/keras_crop_model_weights_4class_dev_reg_relu.h5"):
             print("yes")
-            # self.model.set_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
+            # self.model.set_weights("cache/keras_crop_model_weights_4class_dev3_reg_relu.h5")
             # return
-            with open("cache/dev2_model.json") as f:
+            with open("cache/dev3_model.json") as f:
                 dev_model = model_from_json(json.dumps(json.load(f)))
-            dev_model.load_weights("cache/keras_crop_model_weights_4class_dev2_reg_relu.h5")
+            dev_model.load_weights("cache/keras_crop_model_weights_4class_dev3_reg_relu.h5")
             
             """
             for dev_layer,layer in zip(dev_model.layers, self.model.layers):
@@ -198,9 +199,12 @@ class RetinaDevModel(BaseModel):
             for layer in self.model.layers:
                 for dev_layer in dev_model.layers:
                     if layer.name == dev_layer.name:
-                        layer.set_weights(dev_layer.get_weights())
-                        # print(layer.name)
-                        break
+                        try:
+                           layer.set_weights(dev_layer.get_weights())
+                           # print(layer.name)
+                           break
+                        except:
+                           print(layer.name)
                 else:
                     print(layer.name)
                         
@@ -215,15 +219,16 @@ class RetinaDevModel(BaseModel):
         config.gpu_options.visible_device_list = "1"
         set_session(tf.Session(config=config))
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
+        keras.backend.get_session().run(tf.global_variables_initializer())
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=20,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=50,
                                      write_graph=True, write_images=False)
 
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=[image_accuracy])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
+        self.model.fit(self.train_images, self.train_labels, batch_size=2, epochs=2000,
                         callbacks=[tb_callback], validation_split=0.005, verbose=2)
 
         self.model.save_weights(os.path.join('cache', 
@@ -238,13 +243,17 @@ class RetinaDevModel(BaseModel):
 
 if __name__ == '__main__':
     args = parse_args()
+    config = tf.ConfigProto()
+    config.gpu_options.visible_device_list = "1"
+    config.gpu_options.per_process_gpu_memory_fraction = 0.8
+    set_session(tf.Session(config=config))
     rm = RetinaDevModel(classification=args.classification, dataset=args.dataset,
                       reload=args.reload, activation=args.activation, cache=args.cache)
     rm.create_model()
     rm.set_weights()
-    # rm.get_data()
-    # print(rm.test_labels.shape)
-    # print(rm.train_images.shape)
+    rm.get_data()
+    print(rm.test_labels.shape)
+    print(rm.train_images.shape)
     # rm.run()
-    # rm.predict()
+    rm.predict()
     K.clear_session()
