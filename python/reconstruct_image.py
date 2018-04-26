@@ -40,5 +40,5 @@ def reconstruct_image_vec(classification='4_class', data=None):
 
 
 # reconstruct_image_vec(classification='2_class', data="cache/test_predict2_class.npy")
-reconstruct_image_vec(classification='4_class', data="cache/test_predict2_class_4_relu.npy")
+reconstruct_image_vec(classification='4_class', data="cache/test_predict2_class_4_dev2_relu.npy")
 # reconstruct_image_vec(classification='3_class', data="cache/test_predict2_class_3.npy")

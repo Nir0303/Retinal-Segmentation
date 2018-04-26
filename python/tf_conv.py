@@ -2,7 +2,9 @@ import tensorflow as tf
 import numpy as np
 import prepare_image
 from scipy.special import expit
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score, roc_auc_score
+from sklearn.metrics import f1_score, accuracy_score, precision_score, \
+    recall_score, roc_auc_score, confusion_matrix
+import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -40,7 +42,7 @@ def tf_accuracy(predict_data):
     print("Accuracy of Background is {}".format(sess.run(1 - abs(b_t-b_p)/b_t)))
     print("Accuracy of Arteries is {}".format(sess.run(1 - abs(a_t - a_p) / a_t)))
     print("Accuracy of Veins is {}".format(sess.run(1 - abs(v_t - v_p) / v_t)))
-    print("Accuracy of Background is {}".format(sess.run(1 - abs(o_t - o_p) / o_t)))
+    print("Accuracy of Overlap is {}".format(sess.run(1 - abs(o_t - o_p) / o_t)))
     print("Overall accuracy is {}".format(sess.run(accuracy)))
 
 
@@ -49,20 +51,32 @@ def np_f1score(predict_data):
                                             dataset="small")
     predict_label = np.load(predict_data)
     predict_label = softmax(expit(predict_label.transpose(1, 2, 3, 0))).transpose(3, 0, 1, 2)
-    predict = np.argmax(predict_label, axis=1).reshape(11 * 565 * 565)
-    test = np.argmax(test_label, axis=1).reshape(11 * 565 * 565)
-    f1_s = f1_score(predict, test, average=None)
-    f1_s_w = f1_score(predict, test, average='weighted')
-    precision_s = precision_score(predict, test, average=None)
-    precision_s_w = precision_score(predict, test, average='weighted')
-    recall_s = recall_score(predict, test, average=None)
-    recall_s_w = recall_score(predict, test, average='weighted')
+    print(np.argmax(test_label, axis=1).shape)
+    predict = np.argmax(predict_label, axis=1).reshape(10 * 565 * 565)
+    test = np.argmax(test_label, axis=1).reshape(10 * 565 * 565)
+    f1_s = f1_score(test, predict, average=None)
+    f1_s_w = f1_score(test, predict, average='weighted')
+    precision_s = precision_score(test, predict, average=None)
+    precision_s_w = precision_score(test, predict, average='weighted')
+    recall_s = recall_score(test, predict, average=None)
+    recall_s_w = recall_score(test, predict, average='weighted')
+    conf_matrix = confusion_matrix(test, predict)
+    """
+    plt.imshow(conf_matrix, interpolation='nearest', cmap=plt.cm.Blues)
+    plt.title("Confusion matrix")
+    plt.colorbar()
+    tick_marks = np.arange(4)
+    plt.xticks(tick_marks, ['a','o','v','b'], rotation=45)
+    plt.yticks(tick_marks, ['a','o','v','b'])
+    plt.show()
+    """
     print("Precision of A,O,V,B is {}".format(precision_s))
     print("Overall Precision is {}".format(precision_s_w))
     print("Recall of A,O,V,B is {}".format(recall_s))
     print("Overall Recall is {}".format(recall_s_w))
     print("F1-Score of A,O,V,B {}".format(f1_s))
     print("Overall F-1 Score is {}".format(f1_s_w))
+    print("Confusion matrix is {}".format(conf_matrix))
 
 
 def tf_image_reconstruct():
@@ -85,8 +99,8 @@ def tf_image_reconstruct():
 
 
 # tf_image_reconstruct()
-tf_accuracy(predict_data='cache/test_predict2_class_4_relu.npy')
-np_f1score(predict_data='cache/test_predict2_class_4_relu.npy')
+tf_accuracy(predict_data='cache/test_predict2_class_4_dev2_relu.npy')
+np_f1score(predict_data='cache/test_predict2_class_4_dev2_relu.npy')
 
 
 
