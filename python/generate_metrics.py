@@ -4,7 +4,7 @@ import prepare_image
 from scipy.special import expit
 from sklearn.metrics import f1_score, accuracy_score, precision_score, \
     recall_score, roc_auc_score, confusion_matrix
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from PIL import Image
 
 
@@ -44,8 +44,8 @@ def tf_accuracy(predict_data, test_data):
 def np_f1score(predict_data, test_data):
     predict_data = softmax(expit(predict_data.transpose(1, 2, 3, 0))).transpose(3, 0, 1, 2)
     print(np.argmax(test_data, axis=1).shape)
-    predict = np.argmax(predict_data, axis=1).reshape(10 * 565 * 565)
-    test = np.argmax(test_data, axis=1).reshape(10 * 565 * 565)
+    predict = np.argmax(predict_data, axis=1).reshape(len(predict_data) * 565 * 565)
+    test = np.argmax(test_data, axis=1).reshape(len(predict_data) * 565 * 565)
     f1_s = f1_score(test, predict, average=None)
     f1_s_w = f1_score(test, predict, average='weighted')
     precision_s = precision_score(test, predict, average=None)

@@ -216,7 +216,7 @@ class RetinaDevModel(BaseModel):
             #                                       'keras_crop_model_weights_4class_dev2_reg_{}.h5'.format(
             #                                           self.activation)))
 
-    def run(self):
+    def fit(self):
         print(self.train_images.shape)
         config = tf.ConfigProto()
         config.gpu_options.visible_device_list = "1"
@@ -237,8 +237,8 @@ class RetinaDevModel(BaseModel):
         self.model.save_weights(os.path.join('cache', 
                                              'keras_crop_model_weights_4class_dev3_reg_{}.h5'.format(self.activation)))
     
-    def predict(self):
-        test_predict = self.model.predict(self.test_images, batch_size=10)
+    def predict(self,data):
+        test_predict = self.model.predict(data, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
         np.save('cache/test_predict2_class_4_dev3_{}.npy'.format(self.activation), test_predict)
@@ -258,5 +258,5 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
     # rm.run()
-    rm.predict()
+    rm.predict(rm.test_images)
     K.clear_session()
