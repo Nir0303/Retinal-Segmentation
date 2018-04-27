@@ -190,16 +190,16 @@ class RetinaDevModel(BaseModel):
 
     def fit(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-4, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
-        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=50,
+        tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=100,
                                      write_graph=True, write_images=False)
 
         self.model.compile(optimizer=sgd, loss=sigmoid_cross_entropy_with_logits,
                             metrics=[ image_accuracy])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=2000,
+        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=3000,
                         callbacks=[tb_callback], validation_split=0.005, verbose=2)
 
         self.model.save_weights(os.path.join('cache', 
@@ -221,9 +221,9 @@ if __name__ == '__main__':
                       reload=args.reload, activation=args.activation, cache=args.cache)
     rm.create_model()
     rm.set_weights()
-    # rm.get_data()
-    # print(rm.test_labels.shape)
-    # print(rm.train_images.shape)
-    # rm.run()
-    # rm.predict()
+    rm.get_data()
+    print(rm.test_labels.shape)
+    print(rm.train_images.shape)
+    rm.run()
+    rm.predict(data=rm.test_images)
     K.clear_session()
