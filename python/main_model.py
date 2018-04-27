@@ -17,6 +17,7 @@ from keras.activations import softmax
 import keras.backend.tensorflow_backend as tfb
 from keras.utils import plot_model
 from keras.preprocessing.sequence import pad_sequences
+from keras.backend.tensorflow_backend import set_session
 from keras.optimizers import SGD,Adam
 from time import time
 from base_model import(BaseModel,sigmoid_cross_entropy_with_logits,
@@ -50,7 +51,7 @@ class RetinaModel(BaseModel):
 
     def create_model(self):
         print(self.activation)
-        input_shape = (3, 565, 565)
+        input_shape =(3, 565, 565)
 
         data_input = Input(shape=input_shape, name="data_input")
         conv1_1 = Conv2D(64, kernel_size=(3, 3), activation=self.activation, name="conv1_1",
@@ -128,15 +129,25 @@ class RetinaModel(BaseModel):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-
+        upscore_fuse = Activation('sigmoid')(upscore_fuse)
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
+
 
     def set_weights(self):
         if self.cache and os.path.exists("cache/keras_crop_model_weights_4class_reg.h5"):
             print("yes")
-            self.model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
+            # self.model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
+            with open("cache/main_model.json") as f:
+                dev_model = model_from_json(json.dumps(json.load(f)))
+            dev_model.load_weights("cache/keras_crop_model_weights_4class_reg.h5")
+
+            for dev_layer, layer in zip(dev_model.layers, self.model.layers):
+                try:
+                    layer.set_weights(dev_layer.get_weights())
+                except:
+                    print(layer.name)
     
-    def run(self):
+    def fit(self):
         print(self.train_images.shape)
         sgd = SGD(lr=1e-3, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
@@ -153,8 +164,8 @@ class RetinaModel(BaseModel):
         self.model.save_weights(os.path.join('cache', 
                                              'keras_crop_model_weights_4class_reg_{}.h5'.format(self.activation)))
     
-    def predict(self):
-        test_predict = self.model.predict(self.test_images, batch_size=10)
+    def predict(self, data):
+        test_predict = self.model.predict(data, batch_size=10)
         print(test_predict[0])
         print(test_predict.shape)
         np.save('cache/test_predict2_class_4_{}.npy'.format(self.activation), test_predict)
@@ -162,6 +173,9 @@ class RetinaModel(BaseModel):
 
 if __name__ == '__main__':
     args = parse_args()
+    config = tf.ConfigProto()
+    config.gpu_options.visible_device_list = "1"
+    set_session(tf.Session(config=config))
     rm = RetinaModel(classification=args.classification, dataset=args.dataset,
                       reload=args.reload, activation=args.activation, cache=args.cache)
     rm.create_model()
@@ -169,6 +183,6 @@ if __name__ == '__main__':
     rm.get_data()
     print(rm.test_labels.shape)
     print(rm.train_images.shape)
-    # rm.run()
-    # rm.predict()
+    rm.run()
+    # rm.predict(data = rm.test_images)
     K.clear_session()
