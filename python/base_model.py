@@ -128,8 +128,8 @@ class BaseModel(object):
         self.fit()
         self.set_weights()
         print("Evaluate results for train data")
-        self.evaluate(type="test")
         self.evaluate(type="train")
+        # self.evaluate(type="test")
 
 
 
