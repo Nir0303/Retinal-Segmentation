@@ -166,7 +166,7 @@ class RetinaDevModel(BaseModel):
                                       name="concat-upscore", axis=1)
         upscore_fuse = Conv2D(self._classification, kernel_size=(1, 1), name="upscore_fuse")(concat_upscore)
         upscore_fuse = Dropout(0.2, name="Dropout_Classifier")(upscore_fuse)
-        upscore_fuse = Activation('sigmoid')(upscore_fuse)
+        # upscore_fuse = Activation('sigmoid')(upscore_fuse)
 
         self.model = Model(inputs=[data_input], outputs=[upscore_fuse])
 
@@ -190,7 +190,7 @@ class RetinaDevModel(BaseModel):
 
     def fit(self):
         print(self.train_images.shape)
-        sgd = SGD(lr=1e-4, decay=1e-4, momentum=0.9, nesterov=True)
+        sgd = SGD(lr=1e-9, decay=1e-4, momentum=0.9, nesterov=True)
         weight_save_callback = keras.callbacks.ModelCheckpoint('/cache/checkpoint_weights.h5', monitor='val_loss',
                                                 verbose=0, save_best_only=True, mode='auto')
         tb_callback = keras.callbacks.TensorBoard(log_dir='./Graph/{}/'.format(time()), histogram_freq=100,
@@ -199,7 +199,7 @@ class RetinaDevModel(BaseModel):
         self.model.compile(optimizer=sgd, loss=softmax_cross_entropy_with_logits,
                             metrics=[ image_accuracy])
 
-        self.model.fit(self.train_images, self.train_labels, batch_size=5, epochs=3000,
+        self.model.fit(self.train_images, self.train_labels, batch_size=2, epochs=5000,
                         callbacks=[tb_callback], validation_split=0.005, verbose=2)
 
         self.model.save_weights(os.path.join('cache', 
@@ -209,13 +209,13 @@ class RetinaDevModel(BaseModel):
         self.test_predict = self.model.predict(data, batch_size=10)
         print(self.test_predict[0])
         print(self.test_predict.shape)
-        np.save('cache/train_predict2_class_4_dev2_soft_{}.npy'.format(self.activation), self.test_predict)
+        np.save('cache/test_predict2_class_4_dev2_soft_{}.npy'.format(self.activation), self.test_predict)
 
 
 if __name__ == '__main__':
     args = parse_args()
     config = tf.ConfigProto ()
-    config.gpu_options.visible_device_list = "0"
+    config.gpu_options.visible_device_list = "1"
     set_session (tf.Session (config=config))
     rm = RetinaDevModel(classification=args.classification, dataset=args.dataset,
                       reload=args.reload, activation=args.activation, cache=args.cache)
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     rm.set_weights()
     rm.get_data()
     print(rm.test_labels.shape)
-    print(rm.train_images.shape)
-    # rm.run()
-    rm.predict(data=rm.train_images)
+    # print(rm.train_images.shape)
+    rm.run()
+    rm.predict(data=rm.test_images)
     K.clear_session()
