@@ -29,7 +29,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `pylint python/*.py`
 
 2. Run train phase for different classifiers
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `python3 python/dev2_model.py --classification 4 --cache`
 
 3. Run train phase for different classifiers
+
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; `python3 python/dev2_model.py --classification 4 --predict --cache`
