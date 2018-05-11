@@ -225,5 +225,5 @@ if __name__ == '__main__':
     print(rm.test_labels.shape)
     # print(rm.train_images.shape)
     rm.run()
-    rm.predict(data=rm.test_images)
+    # rm.predict(data=rm.test_images)
     K.clear_session()
